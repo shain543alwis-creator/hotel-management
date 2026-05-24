@@ -181,7 +181,6 @@ async function loadFromSheet() {
 
     renderDash();
     loadHotels();
-    // Keep views updated dynamically when data refreshes
     if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
     if (!document.getElementById("channels").classList.contains("hidden")) loadSummary();
   } catch (e) {
@@ -265,7 +264,6 @@ function getFilteredHotels() {
 // DASHBOARD
 function renderDash() {
   dashGrid.innerHTML = "";
-
   if (!current) return;
 
   if (current.role === "admin") {
@@ -345,7 +343,7 @@ async function addHotel() {
 
   alert("Added");
   hName.value = ""; cId.value = ""; tv.value = ""; from.value = ""; to.value = ""; type.value = ""; ch.value = "";
-  loadFromSheet();
+  await loadFromSheet();
 }
 
 // LOAD HOTELS
@@ -393,28 +391,28 @@ function loadHotel() {
   `;
 }
 
-// DELETE (Fixed to await sheet update before pulling data)
-async function del(i) {
-  const list = window.deleteList || [];
-  const h = list[i];
-  if (!h) return;
+// DELETE (Direct row targeting to fix deletion dropping)
+async function del(rowNum, hotelName, salesKey) {
+  if (!rowNum || isNaN(rowNum)) {
+    alert("Invalid row identification error.");
+    return;
+  }
 
-  if (current.role === "sales" && (h.salesKey || "") !== current.u) {
+  if (current.role === "sales" && salesKey !== current.u) {
     alert("You can only delete your own records");
     return;
   }
 
-  if(!confirm(`Are you sure you want to delete ${h.hotelName}?`)) return;
+  if (!confirm(`Are you sure you want to delete ${hotelName}?`)) return;
 
   await fetch(API_URL, {
     method: "POST",
     body: JSON.stringify({
       action: "delete",
-      row: h._row
+      row: Number(rowNum)
     })
   });
 
-  // Added 'await' here so the screen refreshes ONLY after the Google script completely finishes deletion
   await loadFromSheet();
 }
 
@@ -437,18 +435,23 @@ function loadSummary() {
     .join("");
 }
 
-// DELETE TABLE
+// DELETE TABLE (Fixed variables binding)
 function loadDelete() {
   const list = getVisibleHotels();
-  window.deleteList = list;
 
-  delTable.innerHTML = list.map((h, i) => `
-    <tr>
-      <td>${h.hotelName || ""}</td>
-      <td>${h.salesPerson || ""}</td>
-      <td><button class="btn-danger" onclick="del(${i})">Delete</button></td>
-    </tr>
-  `).join("");
+  delTable.innerHTML = list.map((h) => {
+    // Sanitize values safely for inline strings
+    const escapedName = (h.hotelName || "").replace(/'/g, "\\'");
+    const salesKey = h.salesKey || "";
+    
+    return `
+      <tr>
+        <td>${h.hotelName || ""}</td>
+        <td>${h.salesPerson || ""}</td>
+        <td><button class="btn-danger" onclick="del(${h._row}, '${escapedName}', '${salesKey}')">Delete</button></td>
+      </tr>
+    `;
+  }).join("");
 }
 
 // LOGOUT
