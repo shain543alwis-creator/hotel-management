@@ -325,13 +325,19 @@ function loadSales() {
     .join("");
 }
 
-// ADD HOTEL
+// ADD HOTEL - FIXED CHANNELS FORMAT
 async function addHotel() {
   const user = users.find(x => x.u === sales.value);
   if (!user) {
     alert("Please select a sales person");
     return;
   }
+
+  // Extract clean items from textarea
+  const cleanChannelsArray = ch.value.split("\n").map(s => s.trim()).filter(Boolean);
+  
+  // Format into a single string separated by '|' so Google Apps Script handles it cleanly
+  const channelsString = cleanChannelsArray.join("|");
 
   await fetch(API_URL, {
     method: "POST",
@@ -344,7 +350,7 @@ async function addHotel() {
       salesKey: user.u,
       salesPerson: user.name,
       type: type.value,
-      channels: ch.value.split("\n").map(s => s.trim()).filter(Boolean)
+      channels: channelsString
     })
   });
 
