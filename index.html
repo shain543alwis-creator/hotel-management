@@ -257,7 +257,6 @@
     </div>
 
 <script>
-// Backend configuration hooks context network address mappings tracking properties setup setup parameters
 const API_URL = "https://script.google.com/macros/s/AKfycbxa0Ejf39dmUYV4QzLKDglQXNXKPxcv4BGgVNOvcJqof123i41jLxMy2T9rrpJ-5Cvq/exec";
 
 const users = [
@@ -272,29 +271,37 @@ const users = [
 let current = null;
 let hotels = [];
 
-// Failproof Enter key form listeners setup configurations mapping components routing logic
 document.addEventListener("DOMContentLoaded", () => {
     const catchEnter = (e) => { if (e.key === "Enter") login(); };
     document.getElementById("u").addEventListener("keydown", catchEnter);
     document.getElementById("p").addEventListener("keydown", catchEnter);
 });
 
-// FIX: Split channel arrays by BOTH commas and vertical bars to handle comma-separated lists correctly
+// TOTAL DESTRUCTION OF THE COMBINED STRING BUG: 
+// Unifies whatever the sheet returns into a flat string, then cleanly breaks it apart by commas, pipes, or newlines.
 function normalizeHotel(h, i) {
   if (!h) return null;
   
-  let channels = [];
+  let rawChannelsString = "";
   if (Array.isArray(h.channels)) {
-    channels = h.channels.map(c => typeof c === 'string' ? c.trim() : c).filter(Boolean);
-  } else if (typeof h.channels === "string" && h.channels.trim()) {
-    channels = h.channels.split(/[|,]/).map(c => c.trim()).filter(Boolean);
+    rawChannelsString = h.channels.join(",");
+  } else if (typeof h.channels === "string") {
+    rawChannelsString = h.channels;
+  } else if (h.channels) {
+    rawChannelsString = String(h.channels);
   }
+  
+  // Split using a regex that handles commas, pipes, or newlines instantly
+  const cleanChannelsArray = rawChannelsString
+    .split(/[|,;\n]/)
+    .map(c => c.trim())
+    .filter(Boolean);
   
   return { 
     ...h, 
     hotelName: h.hotelName || "Unnamed Hotel", 
     tvPoints: Number(h.tvPoints || 0), 
-    channels, 
+    channels: cleanChannelsArray, 
     _row: Number(h._row || (i + 2)) 
   };
 }
@@ -506,7 +513,6 @@ async function del(rowNum, hotelName, salesKey) {
   await loadFromSheet();
 }
 
-// FIXED: Iterates over the split list properly to count unique channel footprints individually
 function loadSummary() {
   const visible = getVisibleHotels();
   const map = {}; 
@@ -531,7 +537,7 @@ function loadSummary() {
     return `
       <tr>
         <td><strong style="color: var(--text-dark); font-size: 16px;">${c}</strong></td>
-        <td><strong style="color: var(--primary); font-size: 16px;">${map[c]}</strong> Total Connections</td>
+        <td><strong style="color: var(--primary); font-size: 16px;">${map[c]}</strong> TV points</td>
         <td><span class="role-badge" style="background: var(--accent); color: var(--primary); font-weight: 700; padding: 6px 14px;">${hotelCount} ${hotelLabel}</span></td>
       </tr>
     `;
