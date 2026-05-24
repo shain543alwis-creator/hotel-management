@@ -27,15 +27,15 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background: var(--background); color: var(--text-main); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        body { background: var(--background); color: var(--text-main); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; transition: background 0.3s ease; }
         
         /* Layout Structure */
         .container { width: 100%; max-width: 900px; background: var(--surface); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); transition: all 0.3s ease; }
         .hidden { display: none !important; }
 
-        /* Login Screen Specific Styles */
-        body:has(#loginPage:not(.hidden)) {
-            background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
+        /* Login Screen Styles */
+        body.login-bg {
+            background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%) !important;
         }
         .login-card { max-width: 420px; margin: 0 auto; padding: 32px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); }
         .login-header { text-align: center; margin-bottom: 32px; }
@@ -47,7 +47,7 @@
         .form-group { margin-bottom: 20px; position: relative; }
         label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.875rem; color: var(--text-main); }
         .input-wrapper { position: relative; display: flex; align-items: center; }
-        .input-wrapper i { position: absolute; left: 14px; color: var(--text-muted); font-size: 1rem; }
+        .input-wrapper i { position: absolute; left: 14px; color: var(--text-muted); font-size: 1rem; pointer-events: none; }
         input, select, textarea { width: 100%; padding: 12px 14px 12px 40px; border: 1px solid var(--border); border-radius: var(--radius-md); background: #f8fafc; font-size: 0.95rem; color: var(--text-main); transition: all 0.2s ease; outline: none; }
         textarea { padding-left: 14px; resize: vertical; }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
@@ -79,7 +79,7 @@
         .box { padding: 24px; border-radius: var(--radius-md); color: white; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; box-shadow: var(--shadow-md); }
         .box::before { content: ''; position: absolute; right: -20px; bottom: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; }
         .box h3 { font-size: 1.1rem; font-weight: 600; opacity: 0.9; margin-bottom: 12px; }
-        .box .stat { font-size: 1.75rem; font-weight: 700; margin-bottom: 4px; }
+        .box .stat font-size: 1.75rem; font-weight: 700; margin-bottom: 4px; }
         .box p { font-size: 0.85rem; opacity: 0.8; }
 
         /* Search Layout & Select View Filters */
@@ -114,9 +114,9 @@
         .btn-table-action { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; font-weight: 500; }
     </style>
 </head>
-<body>
+<body class="login-bg">
 
-<div class="container" id="mainContainer">
+<div class="container" id="mainContainer" style="max-width: 460px;">
     <div id="loginPage">
         <div class="login-card">
             <div class="login-header">
@@ -125,17 +125,17 @@
                 <p>Sign in to manage hotel channel catalogs</p>
             </div>
             <div class="form-group">
-                <label>Username</label>
+                <label for="u">Username</label>
                 <div class="input-wrapper">
                     <i class="fa-solid fa-user"></i>
-                    <input type="text" id="u" placeholder="Enter administrative identifier">
+                    <input type="text" id="u" placeholder="admin or representative name" autocomplete="username">
                 </div>
             </div>
             <div class="form-group">
-                <label>Password</label>
+                <label for="p">Password</label>
                 <div class="input-wrapper">
                     <i class="fa-solid fa-lock"></i>
-                    <input type="password" id="p" placeholder="••••••••">
+                    <input type="password" id="p" placeholder="••••••••" autocomplete="current-password">
                 </div>
             </div>
             <button class="btn-primary" onclick="login()">
@@ -255,7 +255,7 @@
         </div>
 
         <div id="channels" class="hidden">
-            <h2 class="page-title"><i class="fa-solid fa-chart-column" style="color:var(--secondary)"></i> Dynamic Broadcast Spectrum Allocation Allocation Matrix Summary</h2>
+            <h2 class="page-title"><i class="fa-solid fa-chart-column" style="color:var(--secondary)"></i> Dynamic Broadcast Spectrum Allocation Matrix Summary</h2>
             <div class="table-responsive">
                 <table>
                     <thead>
@@ -287,6 +287,17 @@ const users = [
 
 let current = null;
 let hotels = [];
+
+// Listen for the Enter Key inside Password or Username inputs to perform a login automatically
+document.addEventListener("DOMContentLoaded", () => {
+    const handleEnter = (event) => {
+        if (event.key === "Enter") {
+            login();
+        }
+    };
+    document.getElementById("u").addEventListener("keydown", handleEnter);
+    document.getElementById("p").addEventListener("keydown", handleEnter);
+});
 
 function normalizeHotel(h, i) {
   if (!h) return null;
@@ -322,27 +333,42 @@ async function loadFromSheet() {
     if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
     if (!document.getElementById("channels").classList.contains("hidden")) loadSummary();
   } catch (e) {
-    console.error("Critical core synchronization error cleanly tracking matrix data mapping arrays: ", e);
+    console.error("Core sync layout mapping trace caught cleanly: ", e);
     hotels = [];
     renderDash();
     loadHotels();
   }
 }
 
-// FIXED LOGIN FUNCTION
+// FIXED FAILPROOF LOGIN FUNCTION
 function login() {
-  const usernameInput = document.getElementById("u").value;
-  const passwordInput = document.getElementById("p").value;
+  const userEl = document.getElementById("u");
+  const passEl = document.getElementById("p");
 
-  current = users.find(x => x.u === usernameInput.toLowerCase() && x.p === passwordInput);
+  if (!userEl || !passEl) {
+    alert("DOM Error: System inputs could not be located.");
+    return;
+  }
+
+  const usernameInput = userEl.value.trim().toLowerCase();
+  const passwordInput = passEl.value;
+
+  if (!usernameInput || !passwordInput) {
+      alert("Please fill in both the username and password fields.");
+      return;
+  }
+
+  current = users.find(x => x.u === usernameInput && x.p === passwordInput);
   
   if (!current) {
     alert("Invalid Credentials Entered. Access Denied.");
     return;
   }
 
-  // Adjust display card configuration containers context UI layouts elements properties
-  document.getElementById("mainContainer").style.maxWidth = "100%";
+  // Swap CSS styling layout flags
+  document.body.classList.remove("login-bg");
+  document.getElementById("mainContainer").style.maxWidth = "900px";
+  
   loginPage.style.display = "none";
   loginPage.classList.add("hidden");
   app.style.display = "block";
@@ -423,7 +449,7 @@ function renderDash() {
     dashGrid.innerHTML += `
       <div class="box" style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);">
         <h3>Overall Global Metrics</h3>
-        <div class="stat">${totalHotels} Hotels</div>
+        <div class="stat" style="font-size:1.75rem; font-weight:700; margin-bottom:4px;">${totalHotels} Hotels</div>
         <p><i class="fa-solid fa-tv"></i> Across ${totalTV} Terminals Active</p>
       </div>
     `;
@@ -443,7 +469,7 @@ function renderDash() {
       dashGrid.innerHTML += `
         <div class="box" style="background: ${assignedBg}">
           <h3>${u.name} Account</h3>
-          <div class="stat">${list.length} Sites Managed</div>
+          <div class="stat" style="font-size:1.75rem; font-weight:700; margin-bottom:4px;">${list.length} Sites</div>
           <p><i class="fa-solid fa-network-wired"></i> Running ${tv} Connected Units</p>
         </div>
       `;
@@ -454,8 +480,8 @@ function renderDash() {
 
     dashGrid.innerHTML = `
       <div class="box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)">
-        <h3>${current.name} Business Board Portfolio</h3>
-        <div class="stat">${list.length} Hotels Assigned</div>
+        <h3>${current.name} Business Portfolio</h3>
+        <div class="stat" style="font-size:1.75rem; font-weight:700; margin-bottom:4px;">${list.length} Hotels Assigned</div>
         <p><i class="fa-solid fa-tv"></i> Monitoring ${tv} Node Endpoints</p>
       </div>
     `;
