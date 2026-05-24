@@ -3,277 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Channel Management</title>
+    <title>Hotel Channel Management System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /* High-Attractive Classic Hotel Theme Colors */
         :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --secondary: #0ea5e9;
-            --success: #10b981;
-            --danger: #ef4444;
-            --background: #f8fafc;
-            --surface: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --radius-lg: 16px;
-            --radius-md: 12px;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --primary: #1e3799;
+            --primary-light: #4a69bd;
+            --accent: #f6b93b;
+            --success: #78e08f;
+            --danger: #eb2f06;
+            --bg-light: #f8f9fa;
+            --text-dark: #2c3e50;
+            --border-color: #dcdde1;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background: var(--background); color: var(--text-main); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; transition: background 0.3s ease; }
+        body { background-color: #f1f2f6; color: var(--text-dark); min-height: 100vh; }
         
-        /* Layout Structure */
-        .container { width: 100%; max-width: 900px; background: var(--surface); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); transition: all 0.3s ease; }
-        .hidden { display: none !important; }
-
-        /* Login Screen Styles */
-        body.login-bg {
-            background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%) !important;
+        /* Attractive Login Background Image Setup */
+        .login-page-bg {
+            background: linear-gradient(rgba(30, 55, 153, 0.75), rgba(12, 20, 52, 0.9)), 
+                        url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
         }
-        .login-card { max-width: 420px; margin: 0 auto; padding: 32px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); }
-        .login-header { text-align: center; margin-bottom: 32px; }
-        .login-header i { font-size: 3rem; color: var(--primary); margin-bottom: 12px; }
-        .login-header h2 { font-size: 1.75rem; font-weight: 700; color: var(--text-main); }
-        .login-header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
 
-        /* Form Controls */
-        .form-group { margin-bottom: 20px; position: relative; }
-        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.875rem; color: var(--text-main); }
-        .input-wrapper { position: relative; display: flex; align-items: center; }
-        .input-wrapper i { position: absolute; left: 14px; color: var(--text-muted); font-size: 1rem; pointer-events: none; }
-        input, select, textarea { width: 100%; padding: 12px 14px 12px 40px; border: 1px solid var(--border); border-radius: var(--radius-md); background: #f8fafc; font-size: 0.95rem; color: var(--text-main); transition: all 0.2s ease; outline: none; }
-        textarea { padding-left: 14px; resize: vertical; }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
-
-        /* Buttons & Actions */
-        button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border: none; border-radius: var(--radius-md); font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease; }
-        .btn-primary { background: var(--primary); color: white; width: 100%; }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
-        .btn-danger { background: #fef2f2; color: var(--danger); border: 1px solid #fee2e2; }
-        .btn-danger:hover { background: var(--danger); color: white; }
+        /* Simplified, Fail-Proof Login Card */
+        .login-box {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+            border-top: 6px solid var(--accent);
+        }
+        .login-box h2 { text-align: center; margin-bottom: 10px; color: var(--primary); font-weight: 700; }
+        .login-box p { text-align: center; color: #7f8c8d; font-size: 14px; margin-bottom: 30px; }
         
-        /* App Header Layout */
-        .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .user-profile { display: flex; align-items: center; gap: 12px; }
-        .user-avatar { width: 44px; height: 44px; background: #e0e7ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 600; }
-        .user-info h4 { font-size: 1rem; font-weight: 600; }
-        .role-badge { display: inline-block; background: #f1f5f9; color: var(--text-muted); padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-top: 2px; }
-        .role-badge.admin { background: #fee2e2; color: var(--danger); }
-
-        /* Top Level Navigation Tabs */
-        .nav-tabs { display: flex; gap: 8px; margin-bottom: 32px; background: #f1f5f9; padding: 6px; border-radius: var(--radius-md); overflow-x: auto; }
-        .nav-tabs button { background: transparent; color: var(--text-muted); padding: 8px 16px; font-size: 0.9rem; font-weight: 500; border-radius: 8px; flex: 1; white-space: nowrap; }
-        .nav-tabs button:hover { color: var(--text-main); }
-        .nav-tabs button.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
-
-        /* Dashboard Overview Content */
-        h2.page-title { font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
-        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
-        .box { padding: 24px; border-radius: var(--radius-md); color: white; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; box-shadow: var(--shadow-md); }
-        .box::before { content: ''; position: absolute; right: -20px; bottom: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; }
-        .box h3 { font-size: 1.1rem; font-weight: 600; opacity: 0.9; margin-bottom: 12px; }
-        .box .stat font-size: 1.75rem; font-weight: 700; margin-bottom: 4px; }
-        .box p { font-size: 0.85rem; opacity: 0.8; }
-
-        /* Search Layout & Select View Filters */
-        .search-container { background: #f8fafc; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 24px; display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
-        @media(max-width: 640px) { .search-container { grid-template-columns: 1fr; } }
+        /* Direct, Non-Nested Simple Form Controls */
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: var(--text-dark); }
+        input[type="text"], input[type="password"], input[type="number"], input[type="date"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 15px;
+            background: var(--bg-light);
+            outline: none;
+            transition: border 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { border: 2px solid var(--primary-light); background: #fff; }
         
-        /* Modern Hotel Card Display UI */
-        .hotel-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); }
-        .hotel-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-        .hotel-title-group h3 { font-size: 1.35rem; color: var(--text-main); }
-        .hotel-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .meta-item { display: flex; gap: 10px; align-items: center; }
-        .meta-item i { width: 32px; height: 32px; background: #f1f5f9; color: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
-        .meta-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
-        .meta-value { font-size: 0.95rem; font-weight: 500; color: var(--text-main); }
+        /* Main Workspace Container Layout */
+        .app-container { max-width: 1100px; margin: 30px auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
+        .app-banner { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); padding: 30px; color: white; display: flex; justify-content: space-between; align-items: center; }
+        .app-banner h1 { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
         
-        /* Dynamic Channel Label Elements */
-        .channel-section-title { font-size: 0.875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.05em; }
-        .channel-flex-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
-        .channel-item { background: #e0f2fe; color: #0369a1; padding: 6px 12px; font-size: 0.85rem; font-weight: 500; border-radius: 6px; border: 1px solid #bae6fd; display: flex; align-items: center; gap: 4px; }
-        .channel-item::before { content: '•'; color: var(--secondary); font-weight: bold; }
+        /* Profile & Badges */
+        .user-panel { display: flex; align-items: center; gap: 15px; }
+        .avatar { width: 45px; height: 45px; background: var(--accent); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+        .role-badge { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 12px; text-transform: uppercase; font-weight: 600; }
+        .role-badge.admin { background: var(--accent); color: var(--primary); }
 
-        /* Tabular Data Components Overview Structure */
-        .table-responsive { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
-        th { background: #f8fafc; color: var(--text-muted); font-weight: 600; padding: 14px 18px; border-bottom: 1px solid var(--border); font-size: 0.85rem; text-transform: uppercase; }
-        td { padding: 14px 18px; border-bottom: 1px solid var(--border); color: var(--text-main); vertical-align: middle; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background: #f8fafc; }
-        
-        /* Action Utility Tools Layout Elements */
-        .btn-table-action { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; font-weight: 500; }
+        /* Navigation Menu Row */
+        .nav-bar { display: flex; background: #2c3e50; padding: 5px; overflow-x: auto; }
+        .nav-bar button { background: transparent; color: #a4b0be; border: none; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; border-radius: 4px; display: flex; align-items: center; gap: 8px; }
+        .nav-bar button:hover { color: #fff; background: rgba(255,255,255,0.1); }
+        .nav-bar button.active { background: var(--accent); color: var(--primary); }
+
+        /* Workspace Panels Padding */
+        .main-content { padding: 40px; min-height: 400px; }
+        .hidden { display: none !important; }
+        h2.section-title { font-size: 22px; color: var(--primary); margin-bottom: 25px; border-bottom: 2px solid var(--bg-light); padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+
+        /* Dashboard Colorful Analytical Cards Layout */
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 10px; }
+        .box { padding: 25px; border-radius: 10px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .box h3 { font-size: 16px; font-weight: 500; opacity: 0.9; margin-bottom: 10px; }
+        .box .stat { font-size: 28px; font-weight: 700; margin-bottom: 5px; }
+        .box p { font-size: 13px; opacity: 0.8; }
+
+        /* Beautiful Hotel Card UI View */
+        .display-card { background: var(--bg-light); border: 1px solid var(--border-color); border-radius: 10px; padding: 30px; margin-top: 20px; }
+        .display-card h3 { color: var(--primary); font-size: 22px; margin-bottom: 20px; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .info-cell { background: white; padding: 15px; border-radius: 6px; border-left: 4px solid var(--primary-light); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .info-cell small { color: #7f8c8d; text-transform: uppercase; font-size: 11px; font-weight: 600; display: block; margin-bottom: 4px; }
+        .info-cell span { font-size: 16px; font-weight: 600; color: var(--text-dark); }
+
+        /* Dynamic Channel Bubble Tags */
+        .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .channel-tag { background: #e8f0fe; color: var(--primary); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid #c7d9f9; }
+
+        /* Table Aesthetics */
+        .table-container { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; text-align: left; background: white; }
+        th { background: var(--primary); color: white; padding: 14px 18px; font-size: 14px; font-weight: 600; }
+        td { padding: 14px 18px; border-bottom: 1px solid var(--border-color); font-size: 15px; }
+        tr:hover td { background-color: var(--bg-light); }
+
+        /* Standardized Action Buttons */
+        .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s; }
+        .btn:hover { background: var(--primary-light); }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #ff4d4d; }
+        .btn-small { padding: 6px 12px; font-size: 13px; border-radius: 4px; }
     </style>
 </head>
-<body class="login-bg">
+<body>
 
-<div class="container" id="mainContainer" style="max-width: 460px;">
-    <div id="loginPage">
-        <div class="login-card">
-            <div class="login-header">
-                <i class="fa-solid fa-hotel"></i>
-                <h2>Welcome Back</h2>
-                <p>Sign in to manage hotel channel catalogs</p>
-            </div>
-            <div class="form-group">
-                <label for="u">Username</label>
-                <div class="input-wrapper">
-                    <i class="fa-solid fa-user"></i>
-                    <input type="text" id="u" placeholder="admin or representative name" autocomplete="username">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="p">Password</label>
-                <div class="input-wrapper">
-                    <i class="fa-solid fa-lock"></i>
-                    <input type="password" id="p" placeholder="••••••••" autocomplete="current-password">
-                </div>
-            </div>
-            <button class="btn-primary" onclick="login()">
-                <span>Sign In Securely</span>
+    <div id="loginPage" class="login-page-bg">
+        <div class="login-box">
+            <h2>Hotel Management</h2>
+            <p>Access the Allocation Distribution Node</p>
+            
+            <label for="u">Username</label>
+            <input type="text" id="u" placeholder="Enter username" autocomplete="off">
+            
+            <label for="p">Password</label>
+            <input type="password" id="p" placeholder="Enter password" autocomplete="off">
+            
+            <button class="btn" style="width: 100%; justify-content: center;" onclick="login()">
+                <span>Secure Sign In</span>
                 <i class="fa-solid fa-arrow-right"></i>
             </button>
         </div>
     </div>
 
-    <div id="app" style="display: none;">
-        <div class="app-header">
-            <div class="user-profile">
-                <div class="user-avatar" id="avatarLetter">U</div>
-                <div class="user-info">
-                    <h4 id="userNameDisplay">Active Worker</h4>
+    <div id="app" class="app-container" style="display: none;">
+        <div class="app-banner">
+            <h1><i class="fa-solid fa-hotel" style="color: var(--accent);"></i> Channel Distribution Portal</h1>
+            <div class="user-panel">
+                <div class="avatar" id="avatarLetter">A</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 15px;" id="userNameDisplay">User</div>
                     <div id="userBadgeSlot"></div>
                 </div>
+                <button class="btn btn-danger btn-small" onclick="logout()" style="margin-left: 10px;">
+                    <i class="fa-solid fa-power-off"></i> Logout
+                </button>
             </div>
-            <button class="btn-danger" onclick="logout()">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                <span>Logout</span>
-            </button>
         </div>
 
-        <div class="nav-tabs" id="navigationTabsPool">
-            <button id="tab-dash" onclick="show('dash')" class="active"><i class="fa-solid fa-chart-pie"></i> Dashboard</button>
-            <button id="tab-hotels" onclick="show('hotels')"><i class="fa-solid fa-list"></i> Catalog View</button>
-            <button id="tab-add" onclick="show('add')"><i class="fa-solid fa-circle-plus"></i> Add Entry</button>
-            <button id="deleteBtn" onclick="show('deletePage')"><i class="fa-solid fa-trash-can"></i> Manage Records</button>
+        <div class="nav-bar" id="navigationTabsPool">
+            <button id="tab-dash" onclick="show('dash')" class="active"><i class="fa-solid fa-gauge"></i> Dashboard</button>
+            <button id="tab-hotels" onclick="show('hotels')"><i class="fa-solid fa-folder-open"></i> Catalog View</button>
+            <button id="tab-add" onclick="show('add')"><i class="fa-solid fa-plus-circle"></i> Add Registry Entry</button>
+            <button id="deleteBtn" onclick="show('deletePage')"><i class="fa-solid fa-sliders"></i> Manage Records</button>
             <button id="channelBtn" onclick="show('channels')"><i class="fa-solid fa-tv"></i> Allocation Summary</button>
         </div>
 
-        <div id="dash">
-            <h2 class="page-title"><i class="fa-solid fa-chart-line" style="color:var(--primary)"></i> Dashboard Overview</h2>
-            <div id="dashGrid" class="dash-grid"></div>
-        </div>
+        <div class="main-content">
+            <div id="dash">
+                <h2 class="section-title"><i class="fa-solid fa-chart-simple"></i> Portfolio Dashboard Overview</h2>
+                <div id="dashGrid" class="dash-grid"></div>
+            </div>
 
-        <div id="hotels" class="hidden">
-            <h2 class="page-title"><i class="fa-solid fa-hotel" style="color:var(--secondary)"></i> Hotel Distribution Catalog</h2>
-            <div class="search-container">
-                <div class="form-group" style="margin:0;">
-                    <label>Query Search Parameters Filter</label>
-                    <div class="input-wrapper">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="hotelSearch" oninput="filterHotels()" placeholder="Search by name, circuit ID, channels or rep...">
+            <div id="hotels" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-hotel"></i> Properties Directory</h2>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                    <div>
+                        <label>Dynamic Search Bar Filter Matrix</label>
+                        <input type="text" id="hotelSearch" oninput="filterHotels()" placeholder="Type to search property name, channels, rep setup...">
+                    </div>
+                    <div>
+                        <label>Target Properties Selector List Dropdown</label>
+                        <select id="hotelSelect" onchange="loadHotel()"></select>
                     </div>
                 </div>
-                <div class="form-group" style="margin:0;">
-                    <label>Quick Navigation Picker Dropdown</label>
-                    <div class="input-wrapper">
-                        <i class="fa-solid fa-folder-open"></i>
-                        <select id="hotelSelect" onchange="loadHotel()" style="padding-left:40px;"></select>
+                <div id="hotelView"></div>
+            </div>
+
+            <div id="add" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-square-plus"></i> Register New Property Assignment</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div>
+                        <label>Assigned Sales Executive Representative</label>
+                        <select id="sales"></select>
+                    </div>
+                    <div>
+                        <label>Official Hotel Location Entity Name</label>
+                        <input type="text" id="hName" placeholder="e.g. Grand Hilton Resort">
+                    </div>
+                    <div>
+                        <label>Circuit Connection Route Terminal Reference ID</label>
+                        <input type="text" id="cId" placeholder="e.g. CKT-99201">
                     </div>
                 </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div>
+                        <label>Active Terminals Count (Total Operational TVs)</label>
+                        <input type="number" id="tv" placeholder="e.g. 150">
+                    </div>
+                    <div>
+                        <label>Agreement Validity Start Initialization Date</label>
+                        <input type="date" id="from">
+                    </div>
+                    <div>
+                        <label>Agreement Expiration Termination Deadline Date</label>
+                        <input type="date" id="to">
+                    </div>
+                </div>
+                <label>Package Tier Tier Category Classification Profile</label>
+                <input type="text" id="type" placeholder="e.g. Full Premium Bundle Premium Pack">
+                
+                <label>Allocated Channel Maps Array Setup Matrix Layout (Enter one channel name text item per single line break rule row layout)</label>
+                <textarea id="ch" rows="6" placeholder="HBO HD&#10;CNN International&#10;ESPN Premium"></textarea>
+                
+                <button class="btn" onclick="addHotel()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Save Profile Record Changes
+                </button>
             </div>
-            <div id="hotelView"></div>
-        </div>
 
-        <div id="add" class="hidden">
-            <h2 class="page-title"><i class="fa-solid fa-square-plus" style="color:var(--success)"></i> Add New Registry Dataset</h2>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
-                <div class="form-group">
-                    <label>Sales Executive Representative Owner</label>
-                    <div class="input-wrapper"><i class="fa-solid fa-user-tie"></i><select id="sales" style="padding-left:40px;"></select></div>
-                </div>
-                <div class="form-group">
-                    <label>Hotel Location Business Name</label>
-                    <div class="input-wrapper"><i class="fa-solid fa-building"></i><input type="text" id="hName"></div>
-                </div>
-                <div class="form-group">
-                    <label>Circuit Connection ID Identifier</label>
-                    <div class="input-wrapper"><i class="fa-solid fa-circle-nodes"></i><input type="text" id="cId"></div>
-                </div>
-            </div>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
-                <div class="form-group">
-                    <label>Active TV Allocation Terminal Points Count</label>
-                    <div class="input-wrapper"><i class="fa-solid fa-tv"></i><input type="number" id="tv"></div>
-                </div>
-                <div class="form-group">
-                    <label>Contract Coverage Valid From Date</label>
-                    <div class="input-wrapper"><i class="fa-solid fa-calendar-days"></i><input type="date" id="from"></div>
-                </div>
-                <div class="form-group">
-                    <label>Contract Expiration Terminating Date</label>
-                    <div class="input-wrapper"><i class="fa-solid fa-calendar-check"></i><input type="date" id="to"></div>
+            <div id="deletePage" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-triangle-exclamation"></i> Administration Record Cleansing Console</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hotel Entity Profile Destination Name</th>
+                                <th>Account Owner Representative Handled</th>
+                                <th style="text-align: right;">System Operations Actions Engine</th>
+                            </tr>
+                        </thead>
+                        <tbody id="delTable"></tbody>
+                    </table>
                 </div>
             </div>
-            <div class="form-group">
-                <label>Package Tier Class Type Category</label>
-                <div class="input-wrapper"><i class="fa-solid fa-box-open"></i><input type="text" id="type"></div>
-            </div>
-            <div class="form-group">
-                <label>Allocated Channel Stream Lists Mapping Matrix (One Channel Item Name Input Row Per Line break)</label>
-                <textarea id="ch" rows="5" placeholder="Example Format Line Inputs:&#10;HBO HD&#10;CNN International&#10;Discovery Channel"></textarea>
-            </div>
-            <button class="btn-primary" onclick="addHotel()" style="width:auto; min-width:200px;">
-                <i class="fa-solid fa-floppy-disk"></i>
-                <span>Commit Registry Record</span>
-            </button>
-        </div>
 
-        <div id="deletePage" class="hidden">
-            <h2 class="page-title"><i class="fa-solid fa-folder-minus" style="color:var(--danger)"></i> Administrative Data Cleansing Management</h2>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th><i class="fa-solid fa-hotel"></i> Hotel Entity Profile Name</th>
-                            <th><i class="fa-solid fa-user-shield"></i> Account Owner Rep</th>
-                            <th style="text-align: right;"><i class="fa-solid fa-gears"></i> Operations Engine Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="delTable"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="channels" class="hidden">
-            <h2 class="page-title"><i class="fa-solid fa-chart-column" style="color:var(--secondary)"></i> Dynamic Broadcast Spectrum Allocation Matrix Summary</h2>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th><i class="fa-solid fa-tower-broadcast"></i> Station Channel Name</th>
-                            <th><i class="fa-solid fa-network-wired"></i> Consolidated Aggregate TV Terminals Points Count</th>
-                            <th><i class="fa-solid fa-hotel"></i> Total Deployment Sites Footprint Utilized</th>
-                        </tr>
-                    </thead>
-                    <tbody id="summaryTable"></tbody>
-                </table>
+            <div id="channels" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-chart-pie"></i> Combined Station Allocation Terminal Mapping Balance Matrix</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Broadcast Station Matrix Identifier</th>
+                                <th>Aggregated Connected Display Nodes Terminal Count</th>
+                                <th>Active Location Distribution Deployment Sites</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryTable"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 <script>
-// Backend execution route API network address link parameter hooks configuration context mapping variables
+// Backend configuration hooks context network address mappings tracking properties setup setup parameters
 const API_URL = "https://script.google.com/macros/s/AKfycbxa0Ejf39dmUYV4QzLKDglQXNXKPxcv4BGgVNOvcJqof123i41jLxMy2T9rrpJ-5Cvq/exec";
 
 const users = [
@@ -288,75 +272,41 @@ const users = [
 let current = null;
 let hotels = [];
 
-// Listen for the Enter Key inside Password or Username inputs to perform a login automatically
+// Failproof Enter key form listeners setup configurations mapping components routing logic
 document.addEventListener("DOMContentLoaded", () => {
-    const handleEnter = (event) => {
-        if (event.key === "Enter") {
-            login();
-        }
-    };
-    document.getElementById("u").addEventListener("keydown", handleEnter);
-    document.getElementById("p").addEventListener("keydown", handleEnter);
+    const catchEnter = (e) => { if (e.key === "Enter") login(); };
+    document.getElementById("u").addEventListener("keydown", catchEnter);
+    document.getElementById("p").addEventListener("keydown", catchEnter);
 });
 
 function normalizeHotel(h, i) {
   if (!h) return null;
-  
-  const channels =
-    Array.isArray(h.channels) ? h.channels :
-    typeof h.channels === "string" && h.channels.trim()
-      ? h.channels.split("|").filter(Boolean)
-      : [];
-
-  return {
-    ...h,
-    hotelName: h.hotelName || "Unnamed Hotel",
-    tvPoints: Number(h.tvPoints || 0),
-    channels,
-    _row: Number(h._row || (i + 2))
-  };
+  const channels = Array.isArray(h.channels) ? h.channels : typeof h.channels === "string" && h.channels.trim() ? h.channels.split("|").filter(Boolean) : [];
+  return { ...h, hotelName: h.hotelName || "Unnamed Hotel", tvPoints: Number(h.tvPoints || 0), channels, _row: Number(h._row || (i + 2)) };
 }
 
-// LOAD SHEET
 async function loadFromSheet() {
   try {
     const res = await fetch(API_URL, { cache: "no-store" });
     const text = await res.text();
     const data = JSON.parse(text || "[]");
-
-    hotels = Array.isArray(data) 
-      ? data.map(normalizeHotel).filter(h => h !== null && h.hotelName !== "Unnamed Hotel") 
-      : [];
-
+    hotels = Array.isArray(data) ? data.map(normalizeHotel).filter(h => h !== null && h.hotelName !== "Unnamed Hotel") : [];
     renderDash();
     loadHotels();
     if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
     if (!document.getElementById("channels").classList.contains("hidden")) loadSummary();
   } catch (e) {
-    console.error("Core sync layout mapping trace caught cleanly: ", e);
+    console.error("System syncing trace warning trace tracking elements array properties execution captured clean: ", e);
     hotels = [];
     renderDash();
     loadHotels();
   }
 }
 
-// FIXED FAILPROOF LOGIN FUNCTION
+// BASIC PREVIOUS LOGIC STRUCTURE - SIMPLIFIED COMPONENT LOOKUP MATCHING EXACT ELEMENT REFERENCES
 function login() {
-  const userEl = document.getElementById("u");
-  const passEl = document.getElementById("p");
-
-  if (!userEl || !passEl) {
-    alert("DOM Error: System inputs could not be located.");
-    return;
-  }
-
-  const usernameInput = userEl.value.trim().toLowerCase();
-  const passwordInput = passEl.value;
-
-  if (!usernameInput || !passwordInput) {
-      alert("Please fill in both the username and password fields.");
-      return;
-  }
+  const usernameInput = document.getElementById("u").value.trim().toLowerCase();
+  const passwordInput = document.getElementById("p").value;
 
   current = users.find(x => x.u === usernameInput && x.p === passwordInput);
   
@@ -365,13 +315,9 @@ function login() {
     return;
   }
 
-  // Swap CSS styling layout flags
-  document.body.classList.remove("login-bg");
-  document.getElementById("mainContainer").style.maxWidth = "900px";
-  
-  loginPage.style.display = "none";
-  loginPage.classList.add("hidden");
-  app.style.display = "block";
+  // Clear authentication screen container state view viewport
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("app").style.display = "block";
 
   userNameDisplay.innerText = current.name;
   avatarLetter.innerText = current.name.charAt(0).toUpperCase();
@@ -382,7 +328,6 @@ function login() {
   loadFromSheet();
 }
 
-// ROLE
 function setupRole() {
   if (current.role === "sales") {
     channelBtn.style.display = "none";
@@ -393,13 +338,11 @@ function setupRole() {
   }
 }
 
-// SHOW
 function show(v) {
   ["dash", "hotels", "channels", "add", "deletePage"].forEach(x => {
     document.getElementById(x).classList.add("hidden");
     document.getElementById("tab-" + x)?.classList.remove("active");
   });
-  
   document.getElementById(v).classList.remove("hidden");
   document.getElementById("tab-" + v)?.classList.add("active");
 
@@ -409,35 +352,20 @@ function show(v) {
   if (v === "dash") renderDash();
 }
 
-// FILTER
 function getVisibleHotels() {
-  return current.role === "admin"
-    ? hotels
-    : hotels.filter(h => (h.salesKey || "") === current.u);
+  return current.role === "admin" ? hotels : hotels.filter(h => (h.salesKey || "") === current.u);
 }
 
 function getFilteredHotels() {
   const q = (hotelSearch.value || "").trim().toLowerCase();
   const list = getVisibleHotels();
-
   if (!q) return list;
-
   return list.filter(h => {
-    const hay = [
-      h.hotelName,
-      h.circuitId,
-      h.salesPerson,
-      h.type,
-      ...(Array.isArray(h.channels) ? h.channels : [])
-    ]
-      .join(" ")
-      .toLowerCase();
-
+    const hay = [h.hotelName, h.circuitId, h.salesPerson, h.type, ...(Array.isArray(h.channels) ? h.channels : [])].join(" ").toLowerCase();
     return hay.includes(q);
   });
 }
 
-// DASHBOARD
 function renderDash() {
   dashGrid.innerHTML = "";
   if (!current) return;
@@ -447,30 +375,29 @@ function renderDash() {
     const totalTV = hotels.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
 
     dashGrid.innerHTML += `
-      <div class="box" style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);">
-        <h3>Overall Global Metrics</h3>
-        <div class="stat" style="font-size:1.75rem; font-weight:700; margin-bottom:4px;">${totalHotels} Hotels</div>
-        <p><i class="fa-solid fa-tv"></i> Across ${totalTV} Terminals Active</p>
+      <div class="box" style="background: linear-gradient(135deg, #1e3799 0%, #4a69bd 100%);">
+        <h3>System Global Footprint</h3>
+        <div class="stat">${totalHotels} Managed Properties</div>
+        <p><i class="fa-solid fa-tv"></i> Across ${totalTV} Operational Displays</p>
       </div>
     `;
 
     users.filter(u => u.role === "sales").forEach((u, idx) => {
       const list = hotels.filter(h => (h.salesKey || "") === u.u);
       const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
-      const analyticalColors = [
-        "linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)",
-        "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-        "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-        "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-        "linear-gradient(135deg, #ec4899 0%, #db2777 100%)"
+      const gradients = [
+        "linear-gradient(135deg, #079992 0%, #38ada9 100%)",
+        "linear-gradient(135deg, #60a3bc 0%, #3c6382 100%)",
+        "linear-gradient(135deg, #e67e22 0%, #d35400 100%)",
+        "linear-gradient(135deg, #78e08f 0%, #38ea92 100%)"
       ];
-      const assignedBg = analyticalColors[idx % analyticalColors.length];
+      const assignedBg = gradients[idx % gradients.length];
 
       dashGrid.innerHTML += `
         <div class="box" style="background: ${assignedBg}">
-          <h3>${u.name} Account</h3>
-          <div class="stat" style="font-size:1.75rem; font-weight:700; margin-bottom:4px;">${list.length} Sites</div>
-          <p><i class="fa-solid fa-network-wired"></i> Running ${tv} Connected Units</p>
+          <h3>${u.name} Portfolio Balance</h3>
+          <div class="stat">${list.length} Accounts</div>
+          <p><i class="fa-solid fa-display"></i> Servicing ${tv} Terminal Points</p>
         </div>
       `;
     });
@@ -479,52 +406,36 @@ function renderDash() {
     const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
 
     dashGrid.innerHTML = `
-      <div class="box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)">
-        <h3>${current.name} Business Portfolio</h3>
-        <div class="stat" style="font-size:1.75rem; font-weight:700; margin-bottom:4px;">${list.length} Hotels Assigned</div>
-        <p><i class="fa-solid fa-tv"></i> Monitoring ${tv} Node Endpoints</p>
+      <div class="box" style="background: linear-gradient(135deg, #079992 0%, #38ada9 100%)">
+        <h3>Representative Managed Portfolio</h3>
+        <div class="stat">${list.length} Monitored Client Sites</div>
+        <p><i class="fa-solid fa-tv"></i> Tracking ${tv} Node Endpoints</p>
       </div>
     `;
   }
 }
 
-// SALES LIST
 function loadSales() {
   if (current.role === "sales") {
     sales.innerHTML = `<option value="${current.u}">${current.name}</option>`;
     sales.value = current.u;
     return;
   }
-
-  sales.innerHTML = users
-    .filter(u => u.role === "sales")
-    .map(u => `<option value="${u.u}">${u.name}</option>`)
-    .join("");
+  sales.innerHTML = users.filter(u => u.role === "sales").map(u => `<option value="${u.u}">${u.name}</option>`).join("");
 }
 
-// ADD HOTEL
 async function addHotel() {
   const user = users.find(x => x.u === sales.value);
-  if (!user) {
-    alert("Please assign a valid active manager.");
-    return;
-  }
-
+  if (!user) { alert("Please assign a valid active manager."); return; }
   const cleanChannelsArray = ch.value.split("\n").map(s => s.trim()).filter(Boolean);
   const channelsString = cleanChannelsArray.join("|");
 
   await fetch(API_URL, {
     method: "POST",
     body: JSON.stringify({
-      hotelName: hName.value,
-      circuitId: cId.value,
-      tvPoints: tv.value,
-      from: from.value,
-      to: to.value,
-      salesKey: user.u,
-      salesPerson: user.name,
-      type: type.value,
-      channels: channelsString
+      hotelName: hName.value, circuitId: cId.value, tvPoints: tv.value,
+      from: from.value, to: to.value, salesKey: user.u, salesPerson: user.name,
+      type: type.value, channels: channelsString
     })
   });
 
@@ -533,116 +444,59 @@ async function addHotel() {
   await loadFromSheet();
 }
 
-// LOAD HOTELS
 function loadHotels() {
   const list = getFilteredHotels();
   window.hotelList = list;
-
-  hotelSelect.innerHTML = list
-    .map((h, i) => `<option value="${i}">${h.hotelName}</option>`)
-    .join("");
-
+  hotelSelect.innerHTML = list.map((h, i) => `<option value="${i}">${h.hotelName}</option>`).join("");
   if (list.length === 0) {
-    hotelView.innerHTML = `<div style='text-align:center; padding: 40px; color: var(--text-muted);'><i class='fa-solid fa-folder-open' style='font-size:2rem; margin-bottom:8px;'></i><p>No matching hotels match specified filters parameters.</p></div>`;
+    hotelView.innerHTML = `<div style='text-align:center; padding: 40px; color:#7f8c8d;'><p>No matching registries sync to filter bounds parameters.</p></div>`;
     return;
   }
-
   hotelSelect.value = "0";
   loadHotel();
 }
 
-// SEARCH
-function filterHotels() {
-  loadHotels();
-}
+function filterHotels() { loadHotels(); }
 
-// VIEW HOTEL
 function loadHotel() {
   const list = window.hotelList || [];
   const h = list[Number(hotelSelect.value)];
-
-  if (!h) {
-    hotelView.innerHTML = "";
-    return;
-  }
+  if (!h) { hotelView.innerHTML = ""; return; }
 
   hotelView.innerHTML = `
-    <div class="hotel-card">
-      <div class="hotel-card-header">
-        <div class="hotel-title-group">
-          <h3>${h.hotelName || ""}</h3>
-        </div>
-      </div>
-      <div class="hotel-meta-grid">
-        <div class="meta-item">
-          <i class="fa-solid fa-user-tie"></i>
-          <div>
-            <div class="meta-label">Assigned Executive Rep</div>
-            <div class="meta-value">${h.salesPerson || ""}</div>
-          </div>
-        </div>
-        <div class="meta-item">
-          <i class="fa-solid fa-circle-nodes"></i>
-          <div>
-            <div class="meta-label">Network Circuit Line ID</div>
-            <div class="meta-value">${h.circuitId || "N/A"}</div>
-          </div>
-        </div>
-        <div class="meta-item">
-          <i class="fa-solid fa-tv"></i>
-          <div>
-            <div class="meta-label">Connected Points</div>
-            <div class="meta-value">${h.tvPoints || 0} Units</div>
-          </div>
-        </div>
-        <div class="meta-item">
-          <i class="fa-solid fa-box-open"></i>
-          <div>
-            <div class="meta-label">Package Tier Category</div>
-            <div class="meta-value">${h.type || "Standard Plan"}</div>
-          </div>
-        </div>
+    <div class="display-card">
+      <h3>${h.hotelName || ""}</h3>
+      <div class="info-grid">
+        <div class="info-cell"><small>Account Strategist Rep</small><span>${h.salesPerson || ""}</span></div>
+        <div class="info-cell"><small>Network Circuit Code ID</small><span>${h.circuitId || "N/A"}</span></div>
+        <div class="info-cell"><small>Active Displays Count</small><span>${h.tvPoints || 0} Units Assigned</span></div>
+        <div class="info-cell"><small>Subscription Package Class</small><span>${h.type || "Standard Plan"}</span></div>
       </div>
       <div>
-        <div class="channel-section-title">Provisioned Active Channels Matrix</div>
-        <div class="channel-flex-wrap">
-          ${(Array.isArray(h.channels) ? h.channels : []).map(c => `<div class="channel-item">${c}</div>`).join("")}
+        <label style="margin-bottom:12px; display:block;">Active Output Stream Allocation Channels Matrix</label>
+        <div class="tag-container">
+          ${(Array.isArray(h.channels) ? h.channels : []).map(c => `<div class="channel-tag">${c}</div>`).join("")}
         </div>
       </div>
     </div>
   `;
 }
 
-// SAFE DELETION ROUTINE
 async function del(rowNum, hotelName, salesKey) {
-  if (current.role === "sales" && salesKey !== current.u) {
-    alert("Unauthorized. You can only drop records matching your personal account owner signatures keys.");
-    return;
-  }
-
+  if (current.role === "sales" && salesKey !== current.u) { alert("Unauthorized access action registry restriction rules validation failed."); return; }
   if (!confirm(`Warning: Are you completely certain you intend to purge records matching ${hotelName}? This action is irreversible.`)) return;
 
   try {
-    await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        action: "delete",
-        row: Number(rowNum)
-      })
-    });
+    await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "delete", row: Number(rowNum) }) });
   } catch (error) {
-    console.error("Execution error processing delete routing framework requests: ", error);
+    console.error("Purging routine system trace mapping failure exception logs dropped clean: ", error);
   }
-
   await loadFromSheet();
 }
 
-// SUMMARY
 function loadSummary() {
   const visible = getVisibleHotels();
-  const map = {};
-  const countMap = {};
-
+  const map = {}; const countMap = {};
   visible.forEach(h => {
     if(h) {
       (Array.isArray(h.channels) ? h.channels : []).forEach(c => {
@@ -651,43 +505,23 @@ function loadSummary() {
       });
     }
   });
-
-  summaryTable.innerHTML = Object.keys(map)
-    .sort()
-    .map(c => `<tr><td><strong>${c}</strong></td><td><i class="fa-solid fa-tv" style="color:var(--text-muted); font-size:0.85rem; margin-right:6px;"></i>${map[c]} Points Total</td><td><span class="role-badge">${countMap[c] || 0} Hotels Linked</span></td></tr>`)
-    .join("");
+  summaryTable.innerHTML = Object.keys(map).sort().map(c => `<tr><td><strong>${c}</strong></td><td><i class="fa-solid fa-tv" style="color:#7f8c8d; margin-right:6px;"></i>${map[c]} Total Connections</td><td><span class="role-badge" style="background:var(--primary-light); color:#fff;">Used in ${countMap[c] || 0} Locations</span></td></tr>`).join("");
 }
 
-// DELETE TABLE
 function loadDelete() {
   const list = getVisibleHotels();
-
   if (list.length === 0) {
-    delTable.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:30px; color:var(--text-muted);">No logs entry maps to clean or manage found.</td></tr>`;
+    delTable.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:30px; color:#7f8c8d;">No active registries found matching user permissions limits filters.</td></tr>`;
     return;
   }
-
   delTable.innerHTML = list.map((h) => {
     if (!h || !h.hotelName) return "";
     const escapedName = (h.hotelName || "").replace(/'/g, "\\'");
-    return `
-      <tr>
-        <td><strong>${h.hotelName || ""}</strong></td>
-        <td><i class="fa-solid fa-user-circle" style="color:var(--text-muted); margin-right:6px;"></i>${h.salesPerson || ""}</td>
-        <td style="text-align: right;">
-            <button class="btn-danger btn-table-action" onclick="del(${h._row}, '${escapedName}', '${h.salesKey || ""}')">
-                <i class="fa-solid fa-trash-can"></i> Drop Record
-            </button>
-        </td>
-      </tr>
-    `;
+    return `<tr><td><strong>${h.hotelName || ""}</strong></td><td>${h.salesPerson || ""}</td><td style="text-align: right;"><button class="btn btn-danger btn-small" onclick="del(${h._row}, '${escapedName}', '${h.salesKey || ""}')"><i class="fa-solid fa-trash"></i> Drop Profile</button></td></tr>`;
   }).join("");
 }
 
-// LOGOUT
-function logout() {
-  location.reload();
-}
+function logout() { location.reload(); }
 </script>
 </body>
 </html>
