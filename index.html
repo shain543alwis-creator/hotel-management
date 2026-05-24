@@ -189,11 +189,11 @@
                         <select id="sales"></select>
                     </div>
                     <div>
-                        <label>Official Hotel Location Entity Name</label>
+                        <label>Hotel/Corporate Account Name</label>
                         <input type="text" id="hName" placeholder="e.g. Grand Hilton Resort">
                     </div>
                     <div>
-                        <label>Circuit Connection Route Terminal Reference ID</label>
+                        <label>Circuit ID</label>
                         <input type="text" id="cId" placeholder="e.g. CKT-99201">
                     </div>
                 </div>
@@ -211,8 +211,11 @@
                         <input type="date" id="to">
                     </div>
                 </div>
-                <label>Package Tier Tier Category Classification Profile</label>
-                <input type="text" id="type" placeholder="e.g. Full Premium Bundle Premium Pack">
+                <label>Solution Type</label>
+                <select id="type">
+                    <option value="IPTV">IPTV</option>
+                    <option value="MATV">MATV</option>
+                </select>
                 
                 <label>Allocated Channel Maps Array Setup Matrix Layout (Enter one channel name text item per single line break rule row layout)</label>
                 <textarea id="ch" rows="6" placeholder="HBO HD&#10;CNN International&#10;ESPN Premium"></textarea>
@@ -228,7 +231,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Hotel Entity Profile Destination Name</th>
+                                <th>Hotel/Corporate Account Name</th>
                                 <th>Account Owner Representative Handled</th>
                                 <th style="text-align: right;">System Operations Actions Engine</th>
                             </tr>
@@ -244,9 +247,9 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Broadcast Station Matrix Identifier</th>
-                                <th>Aggregated Connected Display Nodes Terminal Count</th>
-                                <th>Active Location Distribution Deployment Sites</th>
+                                <th>Channel Identifier</th>
+                                <th>Aggregate Deployment Nodes</th>
+                                <th>Active Location Footprint</th>
                             </tr>
                         </thead>
                         <tbody id="summaryTable"></tbody>
@@ -277,8 +280,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("p").addEventListener("keydown", catchEnter);
 });
 
-// TOTAL DESTRUCTION OF THE COMBINED STRING BUG: 
-// Unifies whatever the sheet returns into a flat string, then cleanly breaks it apart by commas, pipes, or newlines.
 function normalizeHotel(h, i) {
   if (!h) return null;
   
@@ -291,7 +292,6 @@ function normalizeHotel(h, i) {
     rawChannelsString = String(h.channels);
   }
   
-  // Split using a regex that handles commas, pipes, or newlines instantly
   const cleanChannelsArray = rawChannelsString
     .split(/[|,;\n]/)
     .map(c => c.trim())
@@ -299,7 +299,7 @@ function normalizeHotel(h, i) {
   
   return { 
     ...h, 
-    hotelName: h.hotelName || "Unnamed Hotel", 
+    hotelName: h.hotelName || "Unnamed Account", 
     tvPoints: Number(h.tvPoints || 0), 
     channels: cleanChannelsArray, 
     _row: Number(h._row || (i + 2)) 
@@ -311,7 +311,7 @@ async function loadFromSheet() {
     const res = await fetch(API_URL, { cache: "no-store" });
     const text = await res.text();
     const data = JSON.parse(text || "[]");
-    hotels = Array.isArray(data) ? data.map(normalizeHotel).filter(h => h !== null && h.hotelName !== "Unnamed Hotel") : [];
+    hotels = Array.isArray(data) ? data.map(normalizeHotel).filter(h => h !== null && h.hotelName !== "Unnamed Account") : [];
     renderDash();
     loadHotels();
     if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
@@ -396,7 +396,7 @@ function renderDash() {
     dashGrid.innerHTML += `
       <div class="box" style="background: linear-gradient(135deg, #1e3799 0%, #4a69bd 100%);">
         <h3>System Global Footprint</h3>
-        <div class="stat">${totalHotels} Managed Properties</div>
+        <div class="stat">${totalHotels} Managed Accounts</div>
         <p><i class="fa-solid fa-tv"></i> Across ${totalTV} Operational Displays</p>
       </div>
     `;
@@ -459,7 +459,7 @@ async function addHotel() {
   });
 
   alert("Registry Dataset Synchronized Successfully!");
-  hName.value = ""; cId.value = ""; tv.value = ""; from.value = ""; to.value = ""; type.value = ""; ch.value = "";
+  hName.value = ""; cId.value = ""; tv.value = ""; from.value = ""; to.value = ""; type.value = "IPTV"; ch.value = "";
   await loadFromSheet();
 }
 
@@ -487,9 +487,9 @@ function loadHotel() {
       <h3>${h.hotelName || ""}</h3>
       <div class="info-grid">
         <div class="info-cell"><small>Account Strategist Rep</small><span>${h.salesPerson || ""}</span></div>
-        <div class="info-cell"><small>Network Circuit Code ID</small><span>${h.circuitId || "N/A"}</span></div>
+        <div class="info-cell"><small>Circuit ID</small><span>${h.circuitId || "N/A"}</span></div>
         <div class="info-cell"><small>Active Displays Count</small><span>${h.tvPoints || 0} Units Assigned</span></div>
-        <div class="info-cell"><small>Subscription Package Class</small><span>${h.type || "Standard Plan"}</span></div>
+        <div class="info-cell"><small>Solution Type</small><span>${h.type || "IPTV"}</span></div>
       </div>
       <div>
         <label style="margin-bottom:12px; display:block;">Active Output Stream Allocation Channels Matrix</label>
