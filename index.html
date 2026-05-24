@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Channel Management</title>
+    <style>
+        /* Base styling matching your code architecture requirements */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f6fa; margin: 0; padding: 20px; color: #2d3436; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .hidden { display: none !important; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { padding: 10px 15px; border: none; border-radius: 4px; background: #0984e3; color: white; cursor: pointer; font-weight: bold; }
+        button:hover { opacity: 0.9; }
+        .btn-danger { background: #d63031; }
+        .nav { display: flex; gap: 10px; margin-bottom: 20px; background: #dfe6e9; padding: 10px; border-radius: 4px; }
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .box { padding: 15px; color: white; border-radius: 6px; }
+        .box h3 { margin: 0 0 10px 0; }
+        .role-badge { background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; font-size: 0.8em; }
+        .hotel-card { background: #f1f2f6; padding: 15px; border-radius: 6px; border-left: 5px solid #0984e3; margin-top: 15px; }
+        .channel-item { display: inline-block; background: #dfe6e9; padding: 3px 8px; margin: 3px; border-radius: 4px; font-size: 0.9em; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f1f2f6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="loginPage">
+        <h2>System Login</h2>
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="u" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="p" placeholder="Enter password">
+        </div>
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div id="app" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div id="user" style="font-weight: bold; font-size: 1.2em;"></div>
+            <button class="btn-danger" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="nav">
+            <button onclick="show('dash')">Dashboard</button>
+            <button onclick="show('hotels')">View Hotels</button>
+            <button onclick="show('add')">Add Hotel</button>
+            <button id="deleteBtn" onclick="show('deletePage')">Delete Records</button>
+            <button id="channelBtn" onclick="show('channels')">Channel Summary</button>
+        </div>
+
+        <div id="dash">
+            <h2>Dashboard Overview</h2>
+            <div id="dashGrid" class="dash-grid"></div>
+        </div>
+
+        <div id="hotels" class="hidden">
+            <h2>Hotel Catalog</h2>
+            <div class="form-group">
+                <input type="text" id="hotelSearch" oninput="filterHotels()" placeholder="Search by name, circuit ID, channels or rep...">
+            </div>
+            <div class="form-group">
+                <label>Select Hotel</label>
+                <select id="hotelSelect" onchange="loadHotel()"></select>
+            </div>
+            <div id="hotelView"></div>
+        </div>
+
+        <div id="add" class="hidden">
+            <h2>Add New Hotel Entry</h2>
+            <div class="form-group">
+                <label>Sales Executive</label>
+                <select id="sales"></select>
+            </div>
+            <div class="form-group">
+                <label>Hotel Name</label>
+                <input type="text" id="hName">
+            </div>
+            <div class="form-group">
+                <label>Circuit ID</label>
+                <input type="text" id="cId">
+            </div>
+            <div class="form-group">
+                <label>TV Points Count</label>
+                <input type="number" id="tv">
+            </div>
+            <div class="form-group">
+                <label>Active From</label>
+                <input type="date" id="from">
+            </div>
+            <div class="form-group">
+                <label>Active To</label>
+                <input type="date" id="to">
+            </div>
+            <div class="form-group">
+                <label>Type / Package</label>
+                <input type="text" id="type">
+            </div>
+            <div class="form-group">
+                <label>Channels (One per line)</label>
+                <textarea id="ch" rows="5"></textarea>
+            </div>
+            <button onclick="addHotel()">Save Hotel</button>
+        </div>
+
+        <div id="deletePage" class="hidden">
+            <h2>Manage / Remove Records</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hotel Name</th>
+                        <th>Sales Person</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="delTable"></tbody>
+            </table>
+        </div>
+
+        <div id="channels" class="hidden">
+            <h2>Channels Allocation Summary</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Channel Name</th>
+                        <th>Total TV Points</th>
+                        <th>Total Hotels Used</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwoVrqdB3Gun5Mm65nagx3oakMtKHpDOA_Q4IEhwayTHtNFXnmj9q-ibZMagfRy19IC/exec";
+
+const users = [
+  {u:"admin",p:"admin123",role:"admin",name:"Admin"},
+  {u:"asanka",p:"1234",role:"sales",name:"Asanka"},
+  {u:"hadi",p:"1234",role:"sales",name:"Hadi"},
+  {u:"roy",p:"1234",role:"sales",name:"Roy"},
+  {u:"sanjaya",p:"1234",role:"sales",name:"Sanjaya"},
+  {u:"lasan",p:"1234",role:"sales",name:"Lasan"}
+];
+
+let current = null;
+let hotels = [];
+
+function normalizeHotel(h, i) {
+  const channels =
+    Array.isArray(h.channels) ? h.channels :
+    typeof h.channels === "string" && h.channels.trim()
+      ? h.channels.split("|").filter(Boolean)
+      : [];
+
+  return {
+    ...h,
+    tvPoints: Number(h.tvPoints || 0),
+    channels,
+    _row: Number(h._row || (i + 2))
+  };
+}
+
+// LOAD SHEET
+async function loadFromSheet() {
+  try {
+    const res = await fetch(API_URL, { cache: "no-store" });
+    const text = await res.text();
+    const data = JSON.parse(text || "[]");
+
+    hotels = Array.isArray(data) ? data.map(normalizeHotel) : [];
+
+    renderDash();
+    loadHotels();
+    // Keep views updated dynamically when data refreshes
+    if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
+    if (!document.getElementById("channels").classList.contains("hidden")) loadSummary();
+  } catch (e) {
+    console.log(e);
+    hotels = [];
+    renderDash();
+    loadHotels();
+  }
+}
+
+// LOGIN
+function login() {
+  current = users.find(x => x.u === u.value.toLowerCase() && x.p === p.value);
+  if (!current) {
+    alert("Invalid");
+    return;
+  }
+
+  loginPage.style.display = "none";
+  app.style.display = "block";
+
+  user.innerHTML = current.name + " <span class='role-badge'>" + current.role + "</span>";
+
+  setupRole();
+  loadSales();
+  loadFromSheet();
+}
+
+// ROLE
+function setupRole() {
+  if (current.role === "sales") {
+    channelBtn.style.display = "none";
+    deleteBtn.style.display = "block";
+  } else {
+    channelBtn.style.display = "block";
+    deleteBtn.style.display = "block";
+  }
+}
+
+// SHOW
+function show(v) {
+  ["dash", "hotels", "channels", "add", "deletePage"].forEach(x => {
+    document.getElementById(x).classList.add("hidden");
+  });
+  document.getElementById(v).classList.remove("hidden");
+
+  if (v === "channels") loadSummary();
+  if (v === "deletePage") loadDelete();
+  if (v === "hotels") loadHotels();
+  if (v === "dash") renderDash();
+}
+
+// FILTER
+function getVisibleHotels() {
+  return current.role === "admin"
+    ? hotels
+    : hotels.filter(h => (h.salesKey || "") === current.u);
+}
+
+function getFilteredHotels() {
+  const q = (hotelSearch.value || "").trim().toLowerCase();
+  const list = getVisibleHotels();
+
+  if (!q) return list;
+
+  return list.filter(h => {
+    const hay = [
+      h.hotelName,
+      h.circuitId,
+      h.salesPerson,
+      h.type,
+      ...(Array.isArray(h.channels) ? h.channels : [])
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return hay.includes(q);
+  });
+}
+
+// DASHBOARD
+function renderDash() {
+  dashGrid.innerHTML = "";
+
+  if (!current) return;
+
+  if (current.role === "admin") {
+    const totalHotels = hotels.length;
+    const totalTV = hotels.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
+
+    dashGrid.innerHTML += `
+      <div class="box" style="background:#0984e3">
+        <h3>Overall System</h3>
+        <p>Total Hotels: ${totalHotels}</p>
+        <p>Total TV Points: ${totalTV}</p>
+      </div>
+    `;
+
+    users.filter(u => u.role === "sales").forEach(u => {
+      const list = hotels.filter(h => (h.salesKey || "") === u.u);
+      const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
+
+      dashGrid.innerHTML += `
+        <div class="box" style="background:#6c5ce7">
+          <h3>${u.name}</h3>
+          <p>Total Hotels: ${list.length}</p>
+          <p>Total TV Points: ${tv}</p>
+        </div>
+      `;
+    });
+  } else {
+    const list = hotels.filter(h => (h.salesKey || "") === current.u);
+    const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
+
+    dashGrid.innerHTML = `
+      <div class="box" style="background:#00b894">
+        <h3>${current.name}</h3>
+        <p>Total Hotels: ${list.length}</p>
+        <p>Total TV Points: ${tv}</p>
+      </div>
+    `;
+  }
+}
+
+// SALES LIST
+function loadSales() {
+  if (current.role === "sales") {
+    sales.innerHTML = `<option value="${current.u}">${current.name}</option>`;
+    sales.value = current.u;
+    return;
+  }
+
+  sales.innerHTML = users
+    .filter(u => u.role === "sales")
+    .map(u => `<option value="${u.u}">${u.name}</option>`)
+    .join("");
+}
+
+// ADD HOTEL
+async function addHotel() {
+  const user = users.find(x => x.u === sales.value);
+  if (!user) {
+    alert("Please select a sales person");
+    return;
+  }
+
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      hotelName: hName.value,
+      circuitId: cId.value,
+      tvPoints: tv.value,
+      from: from.value,
+      to: to.value,
+      salesKey: user.u,
+      salesPerson: user.name,
+      type: type.value,
+      channels: ch.value.split("\n").map(s => s.trim()).filter(Boolean)
+    })
+  });
+
+  alert("Added");
+  // Reset fields cleanly
+  hName.value = ""; cId.value = ""; tv.value = ""; from.value = ""; to.value = ""; type.value = ""; ch.value = "";
+  loadFromSheet();
+}
+
+// LOAD HOTELS
+function loadHotels() {
+  const list = getFilteredHotels();
+  window.hotelList = list;
+
+  hotelSelect.innerHTML = list
+    .map((h, i) => `<option value="${i}">${h.hotelName}</option>`)
+    .join("");
+
+  if (list.length === 0) {
+    hotelView.innerHTML = "";
+    return;
+  }
+
+  hotelSelect.value = "0";
+  loadHotel();
+}
+
+// SEARCH
+function filterHotels() {
+  loadHotels();
+}
+
+// VIEW HOTEL
+function loadHotel() {
+  const list = window.hotelList || [];
+  const h = list[Number(hotelSelect.value)];
+
+  if (!h) {
+    hotelView.innerHTML = "";
+    return;
+  }
+
+  hotelView.innerHTML = `
+    <div class="hotel-card">
+      <h3>${h.hotelName || ""}</h3>
+      <p><strong>Rep:</strong> ${h.salesPerson || ""}</p>
+      <p><strong>Circuit ID:</strong> ${h.circuitId || ""}</p>
+      <p><strong>Type:</strong> ${h.type || ""}</p>
+      <h4>Channels</h4>
+      ${(Array.isArray(h.channels) ? h.channels : []).map(c => `<div class="channel-item">${c}</div>`).join("")}
+    </div>
+  `;
+}
+
+// DELETE
+async function del(i) {
+  const list = window.deleteList || [];
+  const h = list[i];
+  if (!h) return;
+
+  if (current.role === "sales" && (h.salesKey || "") !== current.u) {
+    alert("You can only delete your own records");
+    return;
+  }
+
+  if(!confirm(`Are you sure you want to delete ${h.hotelName}?`)) return;
+
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "delete",
+      row: h._row
+    })
+  });
+
+  loadFromSheet();
+}
+
+// SUMMARY
+function loadSummary() {
+  const visible = getVisibleHotels();
+  const map = {};
+  const countMap = {};
+
+  visible.forEach(h => {
+    (Array.isArray(h.channels) ? h.channels : []).forEach(c => {
+      map[c] = (map[c] || 0) + Number(h.tvPoints || 0);
+      countMap[c] = (countMap[c] || 0) + 1;
+    });
+  });
+
+  summaryTable.innerHTML = Object.keys(map)
+    .sort()
+    .map(c => `<tr><td>${c}</td><td>${map[c]}</td><td>${countMap[c] || 0}</td></tr>`)
+    .join("");
+}
+
+// DELETE TABLE
+function loadDelete() {
+  const list = getVisibleHotels();
+  window.deleteList = list;
+
+  delTable.innerHTML = list.map((h, i) => `
+    <tr>
+      <td>${h.hotelName || ""}</td>
+      <td>${h.salesPerson || ""}</td>
+      <td><button class="btn-danger" onclick="del(${i})">Delete</button></td>
+    </tr>
+  `).join("");
+}
+
+// LOGOUT
+function logout() {
+  location.reload();
+}
+</script>
+</body>
+</html>
