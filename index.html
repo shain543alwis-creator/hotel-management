@@ -244,9 +244,9 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Channel Identifier</th>
-                                <th>Aggregate Deployment Nodes</th>
-                                <th>Active Location Footprint</th>
+                                <th>Broadcast Station Matrix Identifier</th>
+                                <th>Aggregated Connected Display Nodes Terminal Count</th>
+                                <th>Active Location Distribution Deployment Sites</th>
                             </tr>
                         </thead>
                         <tbody id="summaryTable"></tbody>
@@ -279,10 +279,24 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("p").addEventListener("keydown", catchEnter);
 });
 
+// FIX: Split channel arrays by BOTH commas and vertical bars to handle comma-separated lists correctly
 function normalizeHotel(h, i) {
   if (!h) return null;
-  const channels = Array.isArray(h.channels) ? h.channels : typeof h.channels === "string" && h.channels.trim() ? h.channels.split("|").filter(Boolean) : [];
-  return { ...h, hotelName: h.hotelName || "Unnamed Hotel", tvPoints: Number(h.tvPoints || 0), channels, _row: Number(h._row || (i + 2)) };
+  
+  let channels = [];
+  if (Array.isArray(h.channels)) {
+    channels = h.channels.map(c => typeof c === 'string' ? c.trim() : c).filter(Boolean);
+  } else if (typeof h.channels === "string" && h.channels.trim()) {
+    channels = h.channels.split(/[|,]/).map(c => c.trim()).filter(Boolean);
+  }
+  
+  return { 
+    ...h, 
+    hotelName: h.hotelName || "Unnamed Hotel", 
+    tvPoints: Number(h.tvPoints || 0), 
+    channels, 
+    _row: Number(h._row || (i + 2)) 
+  };
 }
 
 async function loadFromSheet() {
@@ -303,7 +317,6 @@ async function loadFromSheet() {
   }
 }
 
-// BASIC PREVIOUS LOGIC STRUCTURE - SIMPLIFIED COMPONENT LOOKUP MATCHING EXACT ELEMENT REFERENCES
 function login() {
   const usernameInput = document.getElementById("u").value.trim().toLowerCase();
   const passwordInput = document.getElementById("p").value;
@@ -315,7 +328,6 @@ function login() {
     return;
   }
 
-  // Clear authentication screen container state view viewport
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("app").style.display = "block";
 
@@ -494,17 +506,20 @@ async function del(rowNum, hotelName, salesKey) {
   await loadFromSheet();
 }
 
-// UPDATED CHANNEL ALLOCATION MATRIX SUMMARY ROUTINE TO RENDER SPECIFIC WORDING FORMAT REQUESTED
+// FIXED: Iterates over the split list properly to count unique channel footprints individually
 function loadSummary() {
   const visible = getVisibleHotels();
   const map = {}; 
   const countMap = {};
   
   visible.forEach(h => {
-    if(h) {
-      (Array.isArray(h.channels) ? h.channels : []).forEach(c => {
-        map[c] = (map[c] || 0) + Number(h.tvPoints || 0);
-        countMap[c] = (countMap[c] || 0) + 1;
+    if(h && Array.isArray(h.channels)) {
+      h.channels.forEach(c => {
+        const cleanC = c.trim();
+        if (cleanC) {
+          map[cleanC] = (map[cleanC] || 0) + Number(h.tvPoints || 0);
+          countMap[cleanC] = (countMap[cleanC] || 0) + 1;
+        }
       });
     }
   });
@@ -516,7 +531,7 @@ function loadSummary() {
     return `
       <tr>
         <td><strong style="color: var(--text-dark); font-size: 16px;">${c}</strong></td>
-        <td><strong style="color: var(--primary); font-size: 16px;">${map[c]}</strong> TV points</td>
+        <td><strong style="color: var(--primary); font-size: 16px;">${map[c]}</strong> Total Connections</td>
         <td><span class="role-badge" style="background: var(--accent); color: var(--primary); font-weight: 700; padding: 6px 14px;">${hotelCount} ${hotelLabel}</span></td>
       </tr>
     `;
