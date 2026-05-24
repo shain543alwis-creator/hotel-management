@@ -239,14 +239,14 @@
             </div>
 
             <div id="channels" class="hidden">
-                <h2 class="section-title"><i class="fa-solid fa-chart-pie"></i> Combined Station Allocation Terminal Mapping Balance Matrix</h2>
+                <h2 class="section-title"><i class="fa-solid fa-chart-pie"></i> Channel Utilization Footprint</h2>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th>Broadcast Station Matrix Identifier</th>
-                                <th>Aggregated Connected Display Nodes Terminal Count</th>
-                                <th>Active Location Distribution Deployment Sites</th>
+                                <th>Channel Identifier</th>
+                                <th>Aggregate Deployment Nodes</th>
+                                <th>Active Location Footprint</th>
                             </tr>
                         </thead>
                         <tbody id="summaryTable"></tbody>
@@ -494,9 +494,12 @@ async function del(rowNum, hotelName, salesKey) {
   await loadFromSheet();
 }
 
+// UPDATED CHANNEL ALLOCATION MATRIX SUMMARY ROUTINE TO RENDER SPECIFIC WORDING FORMAT REQUESTED
 function loadSummary() {
   const visible = getVisibleHotels();
-  const map = {}; const countMap = {};
+  const map = {}; 
+  const countMap = {};
+  
   visible.forEach(h => {
     if(h) {
       (Array.isArray(h.channels) ? h.channels : []).forEach(c => {
@@ -505,7 +508,19 @@ function loadSummary() {
       });
     }
   });
-  summaryTable.innerHTML = Object.keys(map).sort().map(c => `<tr><td><strong>${c}</strong></td><td><i class="fa-solid fa-tv" style="color:#7f8c8d; margin-right:6px;"></i>${map[c]} Total Connections</td><td><span class="role-badge" style="background:var(--primary-light); color:#fff;">Used in ${countMap[c] || 0} Locations</span></td></tr>`).join("");
+  
+  summaryTable.innerHTML = Object.keys(map).sort().map(c => {
+    const hotelCount = countMap[c] || 0;
+    const hotelLabel = hotelCount === 1 ? "hotel" : "hotels";
+    
+    return `
+      <tr>
+        <td><strong style="color: var(--text-dark); font-size: 16px;">${c}</strong></td>
+        <td><strong style="color: var(--primary); font-size: 16px;">${map[c]}</strong> TV points</td>
+        <td><span class="role-badge" style="background: var(--accent); color: var(--primary); font-weight: 700; padding: 6px 14px;">${hotelCount} ${hotelLabel}</span></td>
+      </tr>
+    `;
+  }).join("");
 }
 
 function loadDelete() {
