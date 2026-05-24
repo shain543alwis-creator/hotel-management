@@ -120,7 +120,7 @@
     <div id="loginPage">
         <div class="login-card">
             <div class="login-header">
-                <i class="fa-solid from fa-hotel"></i>
+                <i class="fa-solid fa-hotel"></i>
                 <h2>Welcome Back</h2>
                 <p>Sign in to manage hotel channel catalogs</p>
             </div>
@@ -246,4 +246,422 @@
                         <tr>
                             <th><i class="fa-solid fa-hotel"></i> Hotel Entity Profile Name</th>
                             <th><i class="fa-solid fa-user-shield"></i> Account Owner Rep</th>
-                            <th style="text-align
+                            <th style="text-align: right;"><i class="fa-solid fa-gears"></i> Operations Engine Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="delTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="channels" class="hidden">
+            <h2 class="page-title"><i class="fa-solid fa-chart-column" style="color:var(--secondary)"></i> Dynamic Broadcast Spectrum Allocation Allocation Matrix Summary</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><i class="fa-solid fa-tower-broadcast"></i> Station Channel Name</th>
+                            <th><i class="fa-solid fa-network-wired"></i> Consolidated Aggregate TV Terminals Points Count</th>
+                            <th><i class="fa-solid fa-hotel"></i> Total Deployment Sites Footprint Utilized</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summaryTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Backend execution route API network address link parameter hooks configuration context mapping variables
+const API_URL = "https://script.google.com/macros/s/AKfycbxa0Ejf39dmUYV4QzLKDglQXNXKPxcv4BGgVNOvcJqof123i41jLxMy2T9rrpJ-5Cvq/exec";
+
+const users = [
+  {u:"admin",p:"admin123",role:"admin",name:"Admin"},
+  {u:"asanka",p:"1234",role:"sales",name:"Asanka"},
+  {u:"hadi",p:"1234",role:"sales",name:"Hadi"},
+  {u:"roy",p:"1234",role:"sales",name:"Roy"},
+  {u:"sanjaya",p:"1234",role:"sales",name:"Sanjaya"},
+  {u:"lasan",p:"1234",role:"sales",name:"Lasan"}
+];
+
+let current = null;
+let hotels = [];
+
+function normalizeHotel(h, i) {
+  if (!h) return null;
+  
+  const channels =
+    Array.isArray(h.channels) ? h.channels :
+    typeof h.channels === "string" && h.channels.trim()
+      ? h.channels.split("|").filter(Boolean)
+      : [];
+
+  return {
+    ...h,
+    hotelName: h.hotelName || "Unnamed Hotel",
+    tvPoints: Number(h.tvPoints || 0),
+    channels,
+    _row: Number(h._row || (i + 2))
+  };
+}
+
+// LOAD SHEET
+async function loadFromSheet() {
+  try {
+    const res = await fetch(API_URL, { cache: "no-store" });
+    const text = await res.text();
+    const data = JSON.parse(text || "[]");
+
+    hotels = Array.isArray(data) 
+      ? data.map(normalizeHotel).filter(h => h !== null && h.hotelName !== "Unnamed Hotel") 
+      : [];
+
+    renderDash();
+    loadHotels();
+    if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
+    if (!document.getElementById("channels").classList.contains("hidden")) loadSummary();
+  } catch (e) {
+    console.error("Critical core synchronization error cleanly tracking matrix data mapping arrays: ", e);
+    hotels = [];
+    renderDash();
+    loadHotels();
+  }
+}
+
+// FIXED LOGIN FUNCTION
+function login() {
+  const usernameInput = document.getElementById("u").value;
+  const passwordInput = document.getElementById("p").value;
+
+  current = users.find(x => x.u === usernameInput.toLowerCase() && x.p === passwordInput);
+  
+  if (!current) {
+    alert("Invalid Credentials Entered. Access Denied.");
+    return;
+  }
+
+  // Adjust display card configuration containers context UI layouts elements properties
+  document.getElementById("mainContainer").style.maxWidth = "100%";
+  loginPage.style.display = "none";
+  loginPage.classList.add("hidden");
+  app.style.display = "block";
+
+  userNameDisplay.innerText = current.name;
+  avatarLetter.innerText = current.name.charAt(0).toUpperCase();
+  userBadgeSlot.innerHTML = `<span class='role-badge ${current.role === 'admin' ? 'admin' : ''}'>${current.role}</span>`;
+
+  setupRole();
+  loadSales();
+  loadFromSheet();
+}
+
+// ROLE
+function setupRole() {
+  if (current.role === "sales") {
+    channelBtn.style.display = "none";
+    deleteBtn.style.display = "block";
+  } else {
+    channelBtn.style.display = "block";
+    deleteBtn.style.display = "block";
+  }
+}
+
+// SHOW
+function show(v) {
+  ["dash", "hotels", "channels", "add", "deletePage"].forEach(x => {
+    document.getElementById(x).classList.add("hidden");
+    document.getElementById("tab-" + x)?.classList.remove("active");
+  });
+  
+  document.getElementById(v).classList.remove("hidden");
+  document.getElementById("tab-" + v)?.classList.add("active");
+
+  if (v === "channels") loadSummary();
+  if (v === "deletePage") loadDelete();
+  if (v === "hotels") loadHotels();
+  if (v === "dash") renderDash();
+}
+
+// FILTER
+function getVisibleHotels() {
+  return current.role === "admin"
+    ? hotels
+    : hotels.filter(h => (h.salesKey || "") === current.u);
+}
+
+function getFilteredHotels() {
+  const q = (hotelSearch.value || "").trim().toLowerCase();
+  const list = getVisibleHotels();
+
+  if (!q) return list;
+
+  return list.filter(h => {
+    const hay = [
+      h.hotelName,
+      h.circuitId,
+      h.salesPerson,
+      h.type,
+      ...(Array.isArray(h.channels) ? h.channels : [])
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return hay.includes(q);
+  });
+}
+
+// DASHBOARD
+function renderDash() {
+  dashGrid.innerHTML = "";
+  if (!current) return;
+
+  if (current.role === "admin") {
+    const totalHotels = hotels.length;
+    const totalTV = hotels.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
+
+    dashGrid.innerHTML += `
+      <div class="box" style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);">
+        <h3>Overall Global Metrics</h3>
+        <div class="stat">${totalHotels} Hotels</div>
+        <p><i class="fa-solid fa-tv"></i> Across ${totalTV} Terminals Active</p>
+      </div>
+    `;
+
+    users.filter(u => u.role === "sales").forEach((u, idx) => {
+      const list = hotels.filter(h => (h.salesKey || "") === u.u);
+      const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
+      const analyticalColors = [
+        "linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)",
+        "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+        "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+        "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+        "linear-gradient(135deg, #ec4899 0%, #db2777 100%)"
+      ];
+      const assignedBg = analyticalColors[idx % analyticalColors.length];
+
+      dashGrid.innerHTML += `
+        <div class="box" style="background: ${assignedBg}">
+          <h3>${u.name} Account</h3>
+          <div class="stat">${list.length} Sites Managed</div>
+          <p><i class="fa-solid fa-network-wired"></i> Running ${tv} Connected Units</p>
+        </div>
+      `;
+    });
+  } else {
+    const list = hotels.filter(h => (h.salesKey || "") === current.u);
+    const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
+
+    dashGrid.innerHTML = `
+      <div class="box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)">
+        <h3>${current.name} Business Board Portfolio</h3>
+        <div class="stat">${list.length} Hotels Assigned</div>
+        <p><i class="fa-solid fa-tv"></i> Monitoring ${tv} Node Endpoints</p>
+      </div>
+    `;
+  }
+}
+
+// SALES LIST
+function loadSales() {
+  if (current.role === "sales") {
+    sales.innerHTML = `<option value="${current.u}">${current.name}</option>`;
+    sales.value = current.u;
+    return;
+  }
+
+  sales.innerHTML = users
+    .filter(u => u.role === "sales")
+    .map(u => `<option value="${u.u}">${u.name}</option>`)
+    .join("");
+}
+
+// ADD HOTEL
+async function addHotel() {
+  const user = users.find(x => x.u === sales.value);
+  if (!user) {
+    alert("Please assign a valid active manager.");
+    return;
+  }
+
+  const cleanChannelsArray = ch.value.split("\n").map(s => s.trim()).filter(Boolean);
+  const channelsString = cleanChannelsArray.join("|");
+
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      hotelName: hName.value,
+      circuitId: cId.value,
+      tvPoints: tv.value,
+      from: from.value,
+      to: to.value,
+      salesKey: user.u,
+      salesPerson: user.name,
+      type: type.value,
+      channels: channelsString
+    })
+  });
+
+  alert("Registry Dataset Synchronized Successfully!");
+  hName.value = ""; cId.value = ""; tv.value = ""; from.value = ""; to.value = ""; type.value = ""; ch.value = "";
+  await loadFromSheet();
+}
+
+// LOAD HOTELS
+function loadHotels() {
+  const list = getFilteredHotels();
+  window.hotelList = list;
+
+  hotelSelect.innerHTML = list
+    .map((h, i) => `<option value="${i}">${h.hotelName}</option>`)
+    .join("");
+
+  if (list.length === 0) {
+    hotelView.innerHTML = `<div style='text-align:center; padding: 40px; color: var(--text-muted);'><i class='fa-solid fa-folder-open' style='font-size:2rem; margin-bottom:8px;'></i><p>No matching hotels match specified filters parameters.</p></div>`;
+    return;
+  }
+
+  hotelSelect.value = "0";
+  loadHotel();
+}
+
+// SEARCH
+function filterHotels() {
+  loadHotels();
+}
+
+// VIEW HOTEL
+function loadHotel() {
+  const list = window.hotelList || [];
+  const h = list[Number(hotelSelect.value)];
+
+  if (!h) {
+    hotelView.innerHTML = "";
+    return;
+  }
+
+  hotelView.innerHTML = `
+    <div class="hotel-card">
+      <div class="hotel-card-header">
+        <div class="hotel-title-group">
+          <h3>${h.hotelName || ""}</h3>
+        </div>
+      </div>
+      <div class="hotel-meta-grid">
+        <div class="meta-item">
+          <i class="fa-solid fa-user-tie"></i>
+          <div>
+            <div class="meta-label">Assigned Executive Rep</div>
+            <div class="meta-value">${h.salesPerson || ""}</div>
+          </div>
+        </div>
+        <div class="meta-item">
+          <i class="fa-solid fa-circle-nodes"></i>
+          <div>
+            <div class="meta-label">Network Circuit Line ID</div>
+            <div class="meta-value">${h.circuitId || "N/A"}</div>
+          </div>
+        </div>
+        <div class="meta-item">
+          <i class="fa-solid fa-tv"></i>
+          <div>
+            <div class="meta-label">Connected Points</div>
+            <div class="meta-value">${h.tvPoints || 0} Units</div>
+          </div>
+        </div>
+        <div class="meta-item">
+          <i class="fa-solid fa-box-open"></i>
+          <div>
+            <div class="meta-label">Package Tier Category</div>
+            <div class="meta-value">${h.type || "Standard Plan"}</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="channel-section-title">Provisioned Active Channels Matrix</div>
+        <div class="channel-flex-wrap">
+          ${(Array.isArray(h.channels) ? h.channels : []).map(c => `<div class="channel-item">${c}</div>`).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// SAFE DELETION ROUTINE
+async function del(rowNum, hotelName, salesKey) {
+  if (current.role === "sales" && salesKey !== current.u) {
+    alert("Unauthorized. You can only drop records matching your personal account owner signatures keys.");
+    return;
+  }
+
+  if (!confirm(`Warning: Are you completely certain you intend to purge records matching ${hotelName}? This action is irreversible.`)) return;
+
+  try {
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "delete",
+        row: Number(rowNum)
+      })
+    });
+  } catch (error) {
+    console.error("Execution error processing delete routing framework requests: ", error);
+  }
+
+  await loadFromSheet();
+}
+
+// SUMMARY
+function loadSummary() {
+  const visible = getVisibleHotels();
+  const map = {};
+  const countMap = {};
+
+  visible.forEach(h => {
+    if(h) {
+      (Array.isArray(h.channels) ? h.channels : []).forEach(c => {
+        map[c] = (map[c] || 0) + Number(h.tvPoints || 0);
+        countMap[c] = (countMap[c] || 0) + 1;
+      });
+    }
+  });
+
+  summaryTable.innerHTML = Object.keys(map)
+    .sort()
+    .map(c => `<tr><td><strong>${c}</strong></td><td><i class="fa-solid fa-tv" style="color:var(--text-muted); font-size:0.85rem; margin-right:6px;"></i>${map[c]} Points Total</td><td><span class="role-badge">${countMap[c] || 0} Hotels Linked</span></td></tr>`)
+    .join("");
+}
+
+// DELETE TABLE
+function loadDelete() {
+  const list = getVisibleHotels();
+
+  if (list.length === 0) {
+    delTable.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:30px; color:var(--text-muted);">No logs entry maps to clean or manage found.</td></tr>`;
+    return;
+  }
+
+  delTable.innerHTML = list.map((h) => {
+    if (!h || !h.hotelName) return "";
+    const escapedName = (h.hotelName || "").replace(/'/g, "\\'");
+    return `
+      <tr>
+        <td><strong>${h.hotelName || ""}</strong></td>
+        <td><i class="fa-solid fa-user-circle" style="color:var(--text-muted); margin-right:6px;"></i>${h.salesPerson || ""}</td>
+        <td style="text-align: right;">
+            <button class="btn-danger btn-table-action" onclick="del(${h._row}, '${escapedName}', '${h.salesKey || ""}')">
+                <i class="fa-solid fa-trash-can"></i> Drop Record
+            </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+// LOGOUT
+function logout() {
+  location.reload();
+}
+</script>
+</body>
+</html>
