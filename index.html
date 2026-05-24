@@ -215,6 +215,7 @@
                 <select id="type">
                     <option value="IPTV">IPTV</option>
                     <option value="MATV">MATV</option>
+                    <option value="DMATV">DMATV</option>
                 </select>
                 
                 <label>Allocated Channel Maps Array Setup Matrix Layout (Enter one channel name text item per single line break rule row layout)</label>
@@ -405,9 +406,10 @@ function renderDash() {
       const list = hotels.filter(h => (h.salesKey || "") === u.u);
       const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
       
-      // Calculate dynamic solution breakdowns
+      // Calculate active solution breakdowns dynamically
       const iptvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "IPTV").length;
       const matvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "MATV").length;
+      const dmatvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "DMATV").length;
       
       const gradients = [
         "linear-gradient(135deg, #079992 0%, #38ada9 100%)",
@@ -422,8 +424,8 @@ function renderDash() {
           <h3>${u.name} Portfolio Balance</h3>
           <div class="stat">${list.length} Accounts</div>
           <p style="margin-bottom: 8px;"><i class="fa-solid fa-display"></i> Servicing ${tv} Terminal Points</p>
-          <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; font-weight: 500;">
-            <i class="fa-solid fa-layer-group"></i> IPTV: <strong>${iptvCount}</strong> &nbsp;|&nbsp; MATV: <strong>${matvCount}</strong>
+          <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 12px; font-weight: 500; line-height: 1.5;">
+            <i class="fa-solid fa-layer-group"></i> IPTV: <strong>${iptvCount}</strong> &nbsp;|&nbsp; MATV: <strong>${matvCount}</strong> &nbsp;|&nbsp; DMATV: <strong>${dmatvCount}</strong>
           </p>
         </div>
       `;
@@ -432,24 +434,24 @@ function renderDash() {
     const list = hotels.filter(h => (h.salesKey || "") === current.u);
     const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
     
-    // Calculate personal profile solution breakdown
+    // Calculate personal profile solution breakdown metrics
     const iptvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "IPTV").length;
     const matvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "MATV").length;
+    const dmatvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "DMATV").length;
 
     dashGrid.innerHTML = `
       <div class="box" style="background: linear-gradient(135deg, #079992 0%, #38ada9 100%)">
         <h3>Representative Managed Portfolio</h3>
         <div class="stat">${list.length} Monitored Client Sites</div>
         <p style="margin-bottom: 8px;"><i class="fa-solid fa-tv"></i> Tracking ${tv} Node Endpoints</p>
-        <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; font-weight: 500;">
-          <i class="fa-solid fa-layer-group"></i> IPTV: <strong>${iptvCount}</strong> &nbsp;|&nbsp; MATV: <strong>${matvCount}</strong>
+        <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 12px; font-weight: 500; line-height: 1.5;">
+          <i class="fa-solid fa-layer-group"></i> IPTV: <strong>${iptvCount}</strong> &nbsp;|&nbsp; MATV: <strong>${matvCount}</strong> &nbsp;|&nbsp; DMATV: <strong>${dmatvCount}</strong>
         </p>
       </div>
     `;
   }
 }
 
-// Remaining component hooks and handlers architecture layout structures
 function loadSales() {
   if (current.role === "sales") {
     sales.innerHTML = `<option value="${current.u}">${current.name}</option>`;
