@@ -4,473 +4,246 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hotel Channel Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f6fa; margin: 0; padding: 20px; color: #2d3436; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #0ea5e9;
+            --success: #10b981;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--background); color: var(--text-main); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        
+        /* Layout Structure */
+        .container { width: 100%; max-width: 900px; background: var(--surface); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); transition: all 0.3s ease; }
         .hidden { display: none !important; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        button { padding: 10px 15px; border: none; border-radius: 4px; background: #0984e3; color: white; cursor: pointer; font-weight: bold; }
-        button:hover { opacity: 0.9; }
-        .btn-danger { background: #d63031; }
-        .nav { display: flex; gap: 10px; margin-bottom: 20px; background: #dfe6e9; padding: 10px; border-radius: 4px; }
-        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
-        .box { padding: 15px; color: white; border-radius: 6px; }
-        .box h3 { margin: 0 0 10px 0; }
-        .role-badge { background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; font-size: 0.8em; }
-        .hotel-card { background: #f1f2f6; padding: 15px; border-radius: 6px; border-left: 5px solid #0984e3; margin-top: 15px; }
-        .channel-item { display: inline-block; background: #dfe6e9; padding: 3px 8px; margin: 3px; border-radius: 4px; font-size: 0.9em; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #f1f2f6; }
+
+        /* Login Screen Specific Styles */
+        body:has(#loginPage:not(.hidden)) {
+            background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
+        }
+        .login-card { max-width: 420px; margin: 0 auto; padding: 32px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); }
+        .login-header { text-align: center; margin-bottom: 32px; }
+        .login-header i { font-size: 3rem; color: var(--primary); margin-bottom: 12px; }
+        .login-header h2 { font-size: 1.75rem; font-weight: 700; color: var(--text-main); }
+        .login-header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
+
+        /* Form Controls */
+        .form-group { margin-bottom: 20px; position: relative; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.875rem; color: var(--text-main); }
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-wrapper i { position: absolute; left: 14px; color: var(--text-muted); font-size: 1rem; }
+        input, select, textarea { width: 100%; padding: 12px 14px 12px 40px; border: 1px solid var(--border); border-radius: var(--radius-md); background: #f8fafc; font-size: 0.95rem; color: var(--text-main); transition: all 0.2s ease; outline: none; }
+        textarea { padding-left: 14px; resize: vertical; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+
+        /* Buttons & Actions */
+        button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border: none; border-radius: var(--radius-md); font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease; }
+        .btn-primary { background: var(--primary); color: white; width: 100%; }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-danger { background: #fef2f2; color: var(--danger); border: 1px solid #fee2e2; }
+        .btn-danger:hover { background: var(--danger); color: white; }
+        
+        /* App Header Layout */
+        .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .user-profile { display: flex; align-items: center; gap: 12px; }
+        .user-avatar { width: 44px; height: 44px; background: #e0e7ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 600; }
+        .user-info h4 { font-size: 1rem; font-weight: 600; }
+        .role-badge { display: inline-block; background: #f1f5f9; color: var(--text-muted); padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-top: 2px; }
+        .role-badge.admin { background: #fee2e2; color: var(--danger); }
+
+        /* Top Level Navigation Tabs */
+        .nav-tabs { display: flex; gap: 8px; margin-bottom: 32px; background: #f1f5f9; padding: 6px; border-radius: var(--radius-md); overflow-x: auto; }
+        .nav-tabs button { background: transparent; color: var(--text-muted); padding: 8px 16px; font-size: 0.9rem; font-weight: 500; border-radius: 8px; flex: 1; white-space: nowrap; }
+        .nav-tabs button:hover { color: var(--text-main); }
+        .nav-tabs button.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
+
+        /* Dashboard Overview Content */
+        h2.page-title { font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        .box { padding: 24px; border-radius: var(--radius-md); color: white; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; box-shadow: var(--shadow-md); }
+        .box::before { content: ''; position: absolute; right: -20px; bottom: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+        .box h3 { font-size: 1.1rem; font-weight: 600; opacity: 0.9; margin-bottom: 12px; }
+        .box .stat { font-size: 1.75rem; font-weight: 700; margin-bottom: 4px; }
+        .box p { font-size: 0.85rem; opacity: 0.8; }
+
+        /* Search Layout & Select View Filters */
+        .search-container { background: #f8fafc; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 24px; display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+        @media(max-width: 640px) { .search-container { grid-template-columns: 1fr; } }
+        
+        /* Modern Hotel Card Display UI */
+        .hotel-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); }
+        .hotel-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+        .hotel-title-group h3 { font-size: 1.35rem; color: var(--text-main); }
+        .hotel-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .meta-item { display: flex; gap: 10px; align-items: center; }
+        .meta-item i { width: 32px; height: 32px; background: #f1f5f9; color: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+        .meta-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+        .meta-value { font-size: 0.95rem; font-weight: 500; color: var(--text-main); }
+        
+        /* Dynamic Channel Label Elements */
+        .channel-section-title { font-size: 0.875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.05em; }
+        .channel-flex-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+        .channel-item { background: #e0f2fe; color: #0369a1; padding: 6px 12px; font-size: 0.85rem; font-weight: 500; border-radius: 6px; border: 1px solid #bae6fd; display: flex; align-items: center; gap: 4px; }
+        .channel-item::before { content: '•'; color: var(--secondary); font-weight: bold; }
+
+        /* Tabular Data Components Overview Structure */
+        .table-responsive { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
+        th { background: #f8fafc; color: var(--text-muted); font-weight: 600; padding: 14px 18px; border-bottom: 1px solid var(--border); font-size: 0.85rem; text-transform: uppercase; }
+        td { padding: 14px 18px; border-bottom: 1px solid var(--border); color: var(--text-main); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f8fafc; }
+        
+        /* Action Utility Tools Layout Elements */
+        .btn-table-action { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; font-weight: 500; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="mainContainer">
     <div id="loginPage">
-        <h2>System Login</h2>
-        <div class="form-group">
-            <label>Username</label>
-            <input type="text" id="u" placeholder="Enter username">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="fa-solid from fa-hotel"></i>
+                <h2>Welcome Back</h2>
+                <p>Sign in to manage hotel channel catalogs</p>
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" id="u" placeholder="Enter administrative identifier">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="p" placeholder="••••••••">
+                </div>
+            </div>
+            <button class="btn-primary" onclick="login()">
+                <span>Sign In Securely</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
         </div>
-        <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="p" placeholder="Enter password">
-        </div>
-        <button onclick="login()">Login</button>
     </div>
 
     <div id="app" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div id="user" style="font-weight: bold; font-size: 1.2em;"></div>
-            <button class="btn-danger" onclick="logout()">Logout</button>
+        <div class="app-header">
+            <div class="user-profile">
+                <div class="user-avatar" id="avatarLetter">U</div>
+                <div class="user-info">
+                    <h4 id="userNameDisplay">Active Worker</h4>
+                    <div id="userBadgeSlot"></div>
+                </div>
+            </div>
+            <button class="btn-danger" onclick="logout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>Logout</span>
+            </button>
         </div>
 
-        <div class="nav">
-            <button onclick="show('dash')">Dashboard</button>
-            <button onclick="show('hotels')">View Hotels</button>
-            <button onclick="show('add')">Add Hotel</button>
-            <button id="deleteBtn" onclick="show('deletePage')">Delete Records</button>
-            <button id="channelBtn" onclick="show('channels')">Channel Summary</button>
+        <div class="nav-tabs" id="navigationTabsPool">
+            <button id="tab-dash" onclick="show('dash')" class="active"><i class="fa-solid fa-chart-pie"></i> Dashboard</button>
+            <button id="tab-hotels" onclick="show('hotels')"><i class="fa-solid fa-list"></i> Catalog View</button>
+            <button id="tab-add" onclick="show('add')"><i class="fa-solid fa-circle-plus"></i> Add Entry</button>
+            <button id="deleteBtn" onclick="show('deletePage')"><i class="fa-solid fa-trash-can"></i> Manage Records</button>
+            <button id="channelBtn" onclick="show('channels')"><i class="fa-solid fa-tv"></i> Allocation Summary</button>
         </div>
 
         <div id="dash">
-            <h2>Dashboard Overview</h2>
+            <h2 class="page-title"><i class="fa-solid fa-chart-line" style="color:var(--primary)"></i> Dashboard Overview</h2>
             <div id="dashGrid" class="dash-grid"></div>
         </div>
 
         <div id="hotels" class="hidden">
-            <h2>Hotel Catalog</h2>
-            <div class="form-group">
-                <input type="text" id="hotelSearch" oninput="filterHotels()" placeholder="Search by name, circuit ID, channels or rep...">
-            </div>
-            <div class="form-group">
-                <label>Select Hotel</label>
-                <select id="hotelSelect" onchange="loadHotel()"></select>
+            <h2 class="page-title"><i class="fa-solid fa-hotel" style="color:var(--secondary)"></i> Hotel Distribution Catalog</h2>
+            <div class="search-container">
+                <div class="form-group" style="margin:0;">
+                    <label>Query Search Parameters Filter</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="hotelSearch" oninput="filterHotels()" placeholder="Search by name, circuit ID, channels or rep...">
+                    </div>
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label>Quick Navigation Picker Dropdown</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <select id="hotelSelect" onchange="loadHotel()" style="padding-left:40px;"></select>
+                    </div>
+                </div>
             </div>
             <div id="hotelView"></div>
         </div>
 
         <div id="add" class="hidden">
-            <h2>Add New Hotel Entry</h2>
-            <div class="form-group">
-                <label>Sales Executive</label>
-                <select id="sales"></select>
+            <h2 class="page-title"><i class="fa-solid fa-square-plus" style="color:var(--success)"></i> Add New Registry Dataset</h2>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
+                <div class="form-group">
+                    <label>Sales Executive Representative Owner</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-user-tie"></i><select id="sales" style="padding-left:40px;"></select></div>
+                </div>
+                <div class="form-group">
+                    <label>Hotel Location Business Name</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-building"></i><input type="text" id="hName"></div>
+                </div>
+                <div class="form-group">
+                    <label>Circuit Connection ID Identifier</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-circle-nodes"></i><input type="text" id="cId"></div>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
+                <div class="form-group">
+                    <label>Active TV Allocation Terminal Points Count</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-tv"></i><input type="number" id="tv"></div>
+                </div>
+                <div class="form-group">
+                    <label>Contract Coverage Valid From Date</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-calendar-days"></i><input type="date" id="from"></div>
+                </div>
+                <div class="form-group">
+                    <label>Contract Expiration Terminating Date</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-calendar-check"></i><input type="date" id="to"></div>
+                </div>
             </div>
             <div class="form-group">
-                <label>Hotel Name</label>
-                <input type="text" id="hName">
+                <label>Package Tier Class Type Category</label>
+                <div class="input-wrapper"><i class="fa-solid fa-box-open"></i><input type="text" id="type"></div>
             </div>
             <div class="form-group">
-                <label>Circuit ID</label>
-                <input type="text" id="cId">
+                <label>Allocated Channel Stream Lists Mapping Matrix (One Channel Item Name Input Row Per Line break)</label>
+                <textarea id="ch" rows="5" placeholder="Example Format Line Inputs:&#10;HBO HD&#10;CNN International&#10;Discovery Channel"></textarea>
             </div>
-            <div class="form-group">
-                <label>TV Points Count</label>
-                <input type="number" id="tv">
-            </div>
-            <div class="form-group">
-                <label>Active From</label>
-                <input type="date" id="from">
-            </div>
-            <div class="form-group">
-                <label>Active To</label>
-                <input type="date" id="to">
-            </div>
-            <div class="form-group">
-                <label>Type / Package</label>
-                <input type="text" id="type">
-            </div>
-            <div class="form-group">
-                <label>Channels (One per line)</label>
-                <textarea id="ch" rows="5"></textarea>
-            </div>
-            <button onclick="addHotel()">Save Hotel</button>
+            <button class="btn-primary" onclick="addHotel()" style="width:auto; min-width:200px;">
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span>Commit Registry Record</span>
+            </button>
         </div>
 
         <div id="deletePage" class="hidden">
-            <h2>Manage / Remove Records</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Hotel Name</th>
-                        <th>Sales Person</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="delTable"></tbody>
-            </table>
-        </div>
-
-        <div id="channels" class="hidden">
-            <h2>Channels Allocation Summary</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Channel Name</th>
-                        <th>Total TV Points</th>
-                        <th>Total Hotels Used</th>
-                    </tr>
-                </thead>
-                <tbody id="summaryTable"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<script>
-// Points to your updated deployed backend script configuration
-const API_URL = "https://script.google.com/macros/s/AKfycbxa0Ejf39dmUYV4QzLKDglQXNXKPxcv4BGgVNOvcJqof123i41jLxMy2T9rrpJ-5Cvq/exec";
-
-const users = [
-  {u:"admin",p:"admin123",role:"admin",name:"Admin"},
-  {u:"asanka",p:"1234",role:"sales",name:"Asanka"},
-  {u:"hadi",p:"1234",role:"sales",name:"Hadi"},
-  {u:"roy",p:"1234",role:"sales",name:"Roy"},
-  {u:"sanjaya",p:"1234",role:"sales",name:"Sanjaya"},
-  {u:"lasan",p:"1234",role:"sales",name:"Lasan"}
-];
-
-let current = null;
-let hotels = [];
-
-function normalizeHotel(h, i) {
-  if (!h) return null;
-  
-  const channels =
-    Array.isArray(h.channels) ? h.channels :
-    typeof h.channels === "string" && h.channels.trim()
-      ? h.channels.split("|").filter(Boolean)
-      : [];
-
-  return {
-    ...h,
-    hotelName: h.hotelName || "Unnamed Hotel",
-    tvPoints: Number(h.tvPoints || 0),
-    channels,
-    _row: Number(h._row || (i + 2))
-  };
-}
-
-// LOAD SHEET
-async function loadFromSheet() {
-  try {
-    const res = await fetch(API_URL, { cache: "no-store" });
-    const text = await res.text();
-    const data = JSON.parse(text || "[]");
-
-    // Clean out broken/null records automatically during synchronization mapping
-    hotels = Array.isArray(data) 
-      ? data.map(normalizeHotel).filter(h => h !== null && h.hotelName !== "Unnamed Hotel") 
-      : [];
-
-    renderDash();
-    loadHotels();
-    if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
-    if (!document.getElementById("channels").classList.contains("hidden")) loadSummary();
-  } catch (e) {
-    console.error("Data tracking failure caught cleanly: ", e);
-    hotels = [];
-    renderDash();
-    loadHotels();
-  }
-}
-
-// LOGIN
-function login() {
-  current = users.find(x => x.u === u.value.toLowerCase() && x.p === p.value);
-  if (!current) {
-    alert("Invalid");
-    return;
-  }
-
-  loginPage.style.display = "none";
-  app.style.display = "block";
-
-  user.innerHTML = current.name + " <span class='role-badge'>" + current.role + "</span>";
-
-  setupRole();
-  loadSales();
-  loadFromSheet();
-}
-
-// ROLE
-function setupRole() {
-  if (current.role === "sales") {
-    channelBtn.style.display = "none";
-    deleteBtn.style.display = "block";
-  } else {
-    channelBtn.style.display = "block";
-    deleteBtn.style.display = "block";
-  }
-}
-
-// SHOW
-function show(v) {
-  ["dash", "hotels", "channels", "add", "deletePage"].forEach(x => {
-    document.getElementById(x).classList.add("hidden");
-  });
-  document.getElementById(v).classList.remove("hidden");
-
-  if (v === "channels") loadSummary();
-  if (v === "deletePage") loadDelete();
-  if (v === "hotels") loadHotels();
-  if (v === "dash") renderDash();
-}
-
-// FILTER
-function getVisibleHotels() {
-  return current.role === "admin"
-    ? hotels
-    : hotels.filter(h => (h.salesKey || "") === current.u);
-}
-
-function getFilteredHotels() {
-  const q = (hotelSearch.value || "").trim().toLowerCase();
-  const list = getVisibleHotels();
-
-  if (!q) return list;
-
-  return list.filter(h => {
-    const hay = [
-      h.hotelName,
-      h.circuitId,
-      h.salesPerson,
-      h.type,
-      ...(Array.isArray(h.channels) ? h.channels : [])
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return hay.includes(q);
-  });
-}
-
-// DASHBOARD
-function renderDash() {
-  dashGrid.innerHTML = "";
-  if (!current) return;
-
-  if (current.role === "admin") {
-    const totalHotels = hotels.length;
-    const totalTV = hotels.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
-
-    dashGrid.innerHTML += `
-      <div class="box" style="background:#0984e3">
-        <h3>Overall System</h3>
-        <p>Total Hotels: ${totalHotels}</p>
-        <p>Total TV Points: ${totalTV}</p>
-      </div>
-    `;
-
-    users.filter(u => u.role === "sales").forEach(u => {
-      const list = hotels.filter(h => (h.salesKey || "") === u.u);
-      const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
-
-      dashGrid.innerHTML += `
-        <div class="box" style="background:#6c5ce7">
-          <h3>${u.name}</h3>
-          <p>Total Hotels: ${list.length}</p>
-          <p>Total TV Points: ${tv}</p>
-        </div>
-      `;
-    });
-  } else {
-    const list = hotels.filter(h => (h.salesKey || "") === current.u);
-    const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
-
-    dashGrid.innerHTML = `
-      <div class="box" style="background:#00b894">
-        <h3>${current.name}</h3>
-        <p>Total Hotels: ${list.length}</p>
-        <p>Total TV Points: ${tv}</p>
-      </div>
-    `;
-  }
-}
-
-// SALES LIST
-function loadSales() {
-  if (current.role === "sales") {
-    sales.innerHTML = `<option value="${current.u}">${current.name}</option>`;
-    sales.value = current.u;
-    return;
-  }
-
-  sales.innerHTML = users
-    .filter(u => u.role === "sales")
-    .map(u => `<option value="${u.u}">${u.name}</option>`)
-    .join("");
-}
-
-// ADD HOTEL - FIXED CHANNELS FORMAT
-async function addHotel() {
-  const user = users.find(x => x.u === sales.value);
-  if (!user) {
-    alert("Please select a sales person");
-    return;
-  }
-
-  // Extract clean items from textarea
-  const cleanChannelsArray = ch.value.split("\n").map(s => s.trim()).filter(Boolean);
-  
-  // Format into a single string separated by '|' so Google Apps Script handles it cleanly
-  const channelsString = cleanChannelsArray.join("|");
-
-  await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      hotelName: hName.value,
-      circuitId: cId.value,
-      tvPoints: tv.value,
-      from: from.value,
-      to: to.value,
-      salesKey: user.u,
-      salesPerson: user.name,
-      type: type.value,
-      channels: channelsString
-    })
-  });
-
-  alert("Added");
-  hName.value = ""; cId.value = ""; tv.value = ""; from.value = ""; to.value = ""; type.value = ""; ch.value = "";
-  await loadFromSheet();
-}
-
-// LOAD HOTELS
-function loadHotels() {
-  const list = getFilteredHotels();
-  window.hotelList = list;
-
-  hotelSelect.innerHTML = list
-    .map((h, i) => `<option value="${i}">${h.hotelName}</option>`)
-    .join("");
-
-  if (list.length === 0) {
-    hotelView.innerHTML = "";
-    return;
-  }
-
-  hotelSelect.value = "0";
-  loadHotel();
-}
-
-// SEARCH
-function filterHotels() {
-  loadHotels();
-}
-
-// VIEW HOTEL
-function loadHotel() {
-  const list = window.hotelList || [];
-  const h = list[Number(hotelSelect.value)];
-
-  if (!h) {
-    hotelView.innerHTML = "";
-    return;
-  }
-
-  hotelView.innerHTML = `
-    <div class="hotel-card">
-      <h3>${h.hotelName || ""}</h3>
-      <p><strong>Rep:</strong> ${h.salesPerson || ""}</p>
-      <p><strong>Circuit ID:</strong> ${h.circuitId || ""}</p>
-      <p><strong>Type:</strong> ${h.type || ""}</p>
-      <h4>Channels</h4>
-      ${(Array.isArray(h.channels) ? h.channels : []).map(c => `<div class="channel-item">${c}</div>`).join("")}
-    </div>
-  `;
-}
-
-// SAFE DELETION ROUTINE
-async function del(rowNum, hotelName, salesKey) {
-  if (current.role === "sales" && salesKey !== current.u) {
-    alert("You can only delete your own records");
-    return;
-  }
-
-  if (!confirm(`Are you sure you want to delete ${hotelName}?`)) return;
-
-  try {
-    await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        action: "delete",
-        row: Number(rowNum)
-      })
-    });
-  } catch (error) {
-    console.error("Execution error processing delete route request: ", error);
-  }
-
-  // Refreshes backend interface data synchronization directly
-  await loadFromSheet();
-}
-
-// SUMMARY
-function loadSummary() {
-  const visible = getVisibleHotels();
-  const map = {};
-  const countMap = {};
-
-  visible.forEach(h => {
-    if(h) {
-      (Array.isArray(h.channels) ? h.channels : []).forEach(c => {
-        map[c] = (map[c] || 0) + Number(h.tvPoints || 0);
-        countMap[c] = (countMap[c] || 0) + 1;
-      });
-    }
-  });
-
-  summaryTable.innerHTML = Object.keys(map)
-    .sort()
-    .map(c => `<tr><td>${c}</td><td>${map[c]}</td><td>${countMap[c] || 0}</td></tr>`)
-    .join("");
-}
-
-// DELETE TABLE
-function loadDelete() {
-  const list = getVisibleHotels();
-
-  delTable.innerHTML = list.map((h) => {
-    if (!h || !h.hotelName) return "";
-    const escapedName = (h.hotelName || "").replace(/'/g, "\\'");
-    return `
-      <tr>
-        <td>${h.hotelName || ""}</td>
-        <td>${h.salesPerson || ""}</td>
-        <td><button class="btn-danger" onclick="del(${h._row}, '${escapedName}', '${h.salesKey || ""}')">Delete</button></td>
-      </tr>
-    `;
-  }).join("");
-}
-
-// LOGOUT
-function logout() {
-  location.reload();
-}
-</script>
-</body>
-</html>
+            <h2 class="page-title"><i class="fa-solid fa-folder-minus" style="color:var(--danger)"></i> Administrative Data Cleansing Management</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><i class="fa-solid fa-hotel"></i> Hotel Entity Profile Name</th>
+                            <th><i class="fa-solid fa-user-shield"></i> Account Owner Rep</th>
+                            <th style="text-align
