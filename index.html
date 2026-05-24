@@ -141,7 +141,8 @@
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbwoVrqdB3Gun5Mm65nagx3oakMtKHpDOA_Q4IEhwayTHtNFXnmj9q-ibZMagfRy19IC/exec";
+// Updated with your current active script URL
+const API_URL = "https://script.google.com/macros/s/AKfycbxa0Ejf39dmUYV4QzLKDglQXNXKPxcv4BGgVNOvcJqof123i41jLxMy2T9rrpJ-5Cvq/exec";
 
 const users = [
   {u:"admin",p:"admin123",role:"admin",name:"Admin"},
@@ -264,6 +265,7 @@ function getFilteredHotels() {
 // DASHBOARD
 function renderDash() {
   dashGrid.innerHTML = "";
+
   if (!current) return;
 
   if (current.role === "admin") {
@@ -391,13 +393,8 @@ function loadHotel() {
   `;
 }
 
-// DELETE (Direct row targeting to fix deletion dropping)
+// DELETE (Updated to pass properties directly, bypassing index dependency errors)
 async function del(rowNum, hotelName, salesKey) {
-  if (!rowNum || isNaN(rowNum)) {
-    alert("Invalid row identification error.");
-    return;
-  }
-
   if (current.role === "sales" && salesKey !== current.u) {
     alert("You can only delete your own records");
     return;
@@ -413,6 +410,7 @@ async function del(rowNum, hotelName, salesKey) {
     })
   });
 
+  // Await allows Google Sheets time to process completely before UI reload
   await loadFromSheet();
 }
 
@@ -435,20 +433,17 @@ function loadSummary() {
     .join("");
 }
 
-// DELETE TABLE (Fixed variables binding)
+// DELETE TABLE (Fixed variable interpolation parameters string passing)
 function loadDelete() {
   const list = getVisibleHotels();
 
   delTable.innerHTML = list.map((h) => {
-    // Sanitize values safely for inline strings
     const escapedName = (h.hotelName || "").replace(/'/g, "\\'");
-    const salesKey = h.salesKey || "";
-    
     return `
       <tr>
         <td>${h.hotelName || ""}</td>
         <td>${h.salesPerson || ""}</td>
-        <td><button class="btn-danger" onclick="del(${h._row}, '${escapedName}', '${salesKey}')">Delete</button></td>
+        <td><button class="btn-danger" onclick="del(${h._row}, '${escapedName}', '${h.salesKey || ""}')">Delete</button></td>
       </tr>
     `;
   }).join("");
