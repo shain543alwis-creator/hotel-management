@@ -389,7 +389,6 @@ function getFilteredHotels() {
   });
 }
 
-// Internal breakdown string generator helper function
 function generateBreakdownHtml(list) {
   const types = ["IPTV enterprise", "IPTV BIZZ", "DMATV", "AMATV", "Channel only", "Hospitality TV"];
   return types.map(t => {
@@ -473,8 +472,12 @@ function loadSales() {
 async function addHotel() {
   const user = users.find(x => x.u === sales.value);
   if (!user) { alert("Please assign a valid active manager."); return; }
+  
+  // Clean empty lines out of channels array
   const cleanChannelsArray = ch.value.split("\n").map(s => s.trim()).filter(Boolean);
-  const channelsString = cleanChannelsArray.join("|");
+  
+  // Create a combined fallback value (comma-separated layout matches standard sheets)
+  const channelsString = cleanChannelsArray.join(",");
 
   await fetch(API_URL, {
     method: "POST",
