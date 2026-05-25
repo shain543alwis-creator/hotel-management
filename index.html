@@ -264,6 +264,7 @@
     </div>
 
 <script>
+// Replace this with your exact active Deployment Web App URL link from Apps Script
 const API_URL = "https://script.google.com/macros/s/AKfycbxa0Ejf39dmUYV4QzLKDglQXNXKPxcv4BGgVNOvcJqof123i41jLxMy2T9rrpJ-5Cvq/exec";
 
 const users = [
@@ -289,13 +290,14 @@ function normalizeHotel(h, i) {
   
   let rawChannelsString = "";
   if (Array.isArray(h.channels)) {
-    rawChannelsString = h.channels.join(",");
+    rawChannelsString = h.channels.join("|");
   } else if (typeof h.channels === "string") {
     rawChannelsString = h.channels;
   } else if (h.channels) {
     rawChannelsString = String(h.channels);
   }
   
+  // Re-split using target pipe separator matrix matches expected backend format structure
   const cleanChannelsArray = rawChannelsString
     .split(/[|,;\n]/)
     .map(c => c.trim())
@@ -321,7 +323,7 @@ async function loadFromSheet() {
     if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
     if (!document.getElementById("channels").classList.contains("hidden")) loadSummary();
   } catch (e) {
-    console.error("System syncing trace warning trace tracking elements array properties execution captured clean: ", e);
+    console.error("System sync warnings traced successfully: ", e);
     hotels = [];
     renderDash();
     loadHotels();
@@ -473,18 +475,21 @@ async function addHotel() {
   const user = users.find(x => x.u === sales.value);
   if (!user) { alert("Please assign a valid active manager."); return; }
   
-  // Clean empty lines out of channels array
+  // Split lines into a true JavaScript string array matching your script's Array.isArray expectation
   const cleanChannelsArray = ch.value.split("\n").map(s => s.trim()).filter(Boolean);
-  
-  // Create a combined fallback value (comma-separated layout matches standard sheets)
-  const channelsString = cleanChannelsArray.join(",");
 
   await fetch(API_URL, {
     method: "POST",
     body: JSON.stringify({
-      hotelName: hName.value, circuitId: cId.value, tvPoints: tv.value,
-      from: from.value, to: to.value, salesKey: user.u, salesPerson: user.name,
-      type: type.value, channels: channelsString
+      hotelName: hName.value, 
+      circuitId: cId.value, 
+      tvPoints: tv.value,
+      from: from.value, 
+      to: to.value, 
+      salesKey: user.u, 
+      salesPerson: user.name,
+      type: type.value, 
+      channels: cleanChannelsArray // Transmit directly as a native Array object
     })
   });
 
@@ -532,13 +537,13 @@ function loadHotel() {
 }
 
 async function del(rowNum, hotelName, salesKey) {
-  if (current.role === "sales" && salesKey !== current.u) { alert("Unauthorized access action registry restriction rules validation failed."); return; }
+  if (current.role === "sales" && salesKey !== current.u) { alert("Unauthorized operational permissions violation."); return; }
   if (!confirm(`Warning: Are you completely certain you intend to purge records matching ${hotelName}? This action is irreversible.`)) return;
 
   try {
     await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "delete", row: Number(rowNum) }) });
   } catch (error) {
-    console.error("Purging routine system trace mapping failure exception logs dropped clean: ", error);
+    console.error("Purge operations trace drop warning: ", error);
   }
   await loadFromSheet();
 }
@@ -577,7 +582,7 @@ function loadSummary() {
 function loadDelete() {
   const list = getVisibleHotels();
   if (list.length === 0) {
-    delTable.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:30px; color:#7f8c8d;">No active registries found matching user permissions limits filters.</td></tr>`;
+    delTable.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:30px; color:#7f8c8d;">No active registries found matching profile layout boundaries.</td></tr>`;
     return;
   }
   delTable.innerHTML = list.map((h) => {
