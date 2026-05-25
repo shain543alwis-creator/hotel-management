@@ -50,4 +50,541 @@
         label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: var(--text-dark); }
         input[type="text"], input[type="password"], input[type="number"], input[type="date"], select, textarea {
             width: 100%;
-            padding:
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 15px;
+            background: var(--bg-light);
+            outline: none;
+            transition: border 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { border: 2px solid var(--primary-light); background: #fff; }
+        
+        /* Main Workspace Container Layout */
+        .app-container { max-width: 1100px; margin: 30px auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
+        .app-banner { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); padding: 30px; color: white; display: flex; justify-content: space-between; align-items: center; }
+        .app-banner h1 { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        
+        /* Profile & Badges */
+        .user-panel { display: flex; align-items: center; gap: 15px; }
+        .avatar { width: 45px; height: 45px; background: var(--accent); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+        .role-badge { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 12px; text-transform: uppercase; font-weight: 600; }
+        .role-badge.admin { background: var(--accent); color: var(--primary); }
+
+        /* Navigation Menu Row */
+        .nav-bar { display: flex; background: #2c3e50; padding: 5px; overflow-x: auto; }
+        .nav-bar button { background: transparent; color: #a4b0be; border: none; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; border-radius: 4px; display: flex; align-items: center; gap: 8px; }
+        .nav-bar button:hover { color: #fff; background: rgba(255,255,255,0.1); }
+        .nav-bar button.active { background: var(--accent); color: var(--primary); }
+
+        /* Workspace Panels Padding */
+        .main-content { padding: 40px; min-height: 400px; }
+        .hidden { display: none !important; }
+        h2.section-title { font-size: 22px; color: var(--primary); margin-bottom: 25px; border-bottom: 2px solid var(--bg-light); padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+
+        /* Dashboard Colorful Analytical Cards Layout */
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 10px; }
+        .box { padding: 25px; border-radius: 10px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .box h3 { font-size: 16px; font-weight: 500; opacity: 0.9; margin-bottom: 10px; }
+        .box .stat { font-size: 28px; font-weight: 700; margin-bottom: 5px; }
+        .box p { font-size: 13px; opacity: 0.8; }
+
+        /* Beautiful Hotel Card UI View */
+        .display-card { background: var(--bg-light); border: 1px solid var(--border-color); border-radius: 10px; padding: 30px; margin-top: 20px; }
+        .display-card h3 { color: var(--primary); font-size: 22px; margin-bottom: 20px; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .info-cell { background: white; padding: 15px; border-radius: 6px; border-left: 4px solid var(--primary-light); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .info-cell small { color: #7f8c8d; text-transform: uppercase; font-size: 11px; font-weight: 600; display: block; margin-bottom: 4px; }
+        .info-cell span { font-size: 16px; font-weight: 600; color: var(--text-dark); }
+
+        /* Dynamic Channel Bubble Tags */
+        .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .channel-tag { background: #e8f0fe; color: var(--primary); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid #c7d9f9; }
+
+        /* Table Aesthetics */
+        .table-container { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; text-align: left; background: white; }
+        th { background: var(--primary); color: white; padding: 14px 18px; font-size: 14px; font-weight: 600; }
+        td { padding: 14px 18px; border-bottom: 1px solid var(--border-color); font-size: 15px; }
+        tr:hover td { background-color: var(--bg-light); }
+
+        /* Standardized Action Buttons */
+        .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s; }
+        .btn:hover { background: var(--primary-light); }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #ff4d4d; }
+        .btn-small { padding: 6px 12px; font-size: 13px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div id="loginPage" class="login-page-bg">
+        <div class="login-box">
+            <h2>Hotel Management</h2>
+            <p>Access the Allocation Distribution Node</p>
+            
+            <label for="u">Username</label>
+            <input type="text" id="u" placeholder="Enter username" autocomplete="off">
+            
+            <label for="p">Password</label>
+            <input type="password" id="p" placeholder="Enter password" autocomplete="off">
+            
+            <button class="btn" style="width: 100%; justify-content: center;" onclick="login()">
+                <span>Secure Sign In</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="app" class="app-container" style="display: none;">
+        <div class="app-banner">
+            <h1><i class="fa-solid fa-hotel" style="color: var(--accent);"></i> Channel Distribution Portal</h1>
+            <div class="user-panel">
+                <div class="avatar" id="avatarLetter">A</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 15px;" id="userNameDisplay">User</div>
+                    <div id="userBadgeSlot"></div>
+                </div>
+                <button class="btn btn-danger btn-small" onclick="logout()" style="margin-left: 10px;">
+                    <i class="fa-solid fa-power-off"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-bar" id="navigationTabsPool">
+            <button id="tab-dash" onclick="show('dash')" class="active"><i class="fa-solid fa-gauge"></i> Dashboard</button>
+            <button id="tab-hotels" onclick="show('hotels')"><i class="fa-solid fa-folder-open"></i> Catalog View</button>
+            <button id="tab-add" onclick="show('add')"><i class="fa-solid fa-plus-circle"></i> Add Registry Entry</button>
+            <button id="deleteBtn" onclick="show('deletePage')"><i class="fa-solid fa-sliders"></i> Manage Records</button>
+            <button id="channelBtn" onclick="show('channels')"><i class="fa-solid fa-tv"></i> Allocation Summary</button>
+        </div>
+
+        <div class="main-content">
+            <div id="dash">
+                <h2 class="section-title"><i class="fa-solid fa-chart-simple"></i> Portfolio Dashboard Overview</h2>
+                <div id="dashGrid" class="dash-grid"></div>
+            </div>
+
+            <div id="hotels" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-hotel"></i> Properties Directory</h2>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                    <div>
+                        <label>Dynamic Search Bar Filter Matrix</label>
+                        <input type="text" id="hotelSearch" oninput="filterHotels()" placeholder="Type to search property name, channels, rep setup...">
+                    </div>
+                    <div>
+                        <label>Target Properties Selector List Dropdown</label>
+                        <select id="hotelSelect" onchange="loadHotel()"></select>
+                    </div>
+                </div>
+                <div id="hotelView"></div>
+            </div>
+
+            <div id="add" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-square-plus"></i> Register New Property Assignment</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div>
+                        <label>Assigned Sales Executive Representative</label>
+                        <select id="sales"></select>
+                    </div>
+                    <div>
+                        <label>Hotel/Corporate Account Name</label>
+                        <input type="text" id="hName" placeholder="e.g. Grand Hilton Resort">
+                    </div>
+                    <div>
+                        <label>Circuit ID</label>
+                        <input type="text" id="cId" placeholder="e.g. CKT-99201">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div>
+                        <label>Active Terminals Count (Total Operational TVs)</label>
+                        <input type="number" id="tv" placeholder="e.g. 150">
+                    </div>
+                    <div>
+                        <label>Agreement Validity Start Initialization Date</label>
+                        <input type="date" id="from">
+                    </div>
+                    <div>
+                        <label>Agreement Expiration Termination Deadline Date</label>
+                        <input type="date" id="to">
+                    </div>
+                </div>
+                <label>Solution Type</label>
+                <select id="type">
+                    <option value="IPTV enterprise">IPTV enterprise</option>
+                    <option value="IPTV BIZZ">IPTV BIZZ</option>
+                    <option value="DMATV">DMATV</option>
+                    <option value="AMATV">AMATV</option>
+                    <option value="Channel only">Channel only</option>
+                    <option value="Hospitality TV">Hospitality TV</option>
+                </select>
+                
+                <label>Allocated Channel Maps Array Setup Matrix Layout (Enter one channel name text item per single line break rule row layout)</label>
+                <textarea id="ch" rows="6" placeholder="HBO HD&#10;CNN International&#10;ESPN Premium"></textarea>
+                
+                <button class="btn" onclick="addHotel()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Save Profile Record Changes
+                </button>
+            </div>
+
+            <div id="deletePage" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-triangle-exclamation"></i> Administration Record Cleansing Console</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hotel/Corporate Account Name</th>
+                                <th>Account Owner Representative Handled</th>
+                                <th style="text-align: right;">System Operations Actions Engine</th>
+                            </tr>
+                        </thead>
+                        <tbody id="delTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="channels" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-chart-pie"></i> Channel Utilization Footprint</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Channel Identifier</th>
+                                <th>Aggregate Deployment Nodes</th>
+                                <th>Active Location Footprint</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxa0Ejf39dmUYV4QzLKDglQXNXKPxcv4BGgVNOvcJqof123i41jLxMy2T9rrpJ-5Cvq/exec";
+
+const users = [
+  {u:"admin",p:"admin123",role:"admin",name:"Admin"},
+  {u:"asanka",p:"1234",role:"sales",name:"Asanka"},
+  {u:"hadi",p:"1234",role:"sales",name:"Hadi"},
+  {u:"roy",p:"1234",role:"sales",name:"Roy"},
+  {u:"sanjaya",p:"1234",role:"sales",name:"Sanjaya"},
+  {u:"lasan",p:"1234",role:"sales",name:"Lasan"}
+];
+
+let current = null;
+let hotels = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+    const catchEnter = (e) => { if (e.key === "Enter") login(); };
+    document.getElementById("u").addEventListener("keydown", catchEnter);
+    document.getElementById("p").addEventListener("keydown", catchEnter);
+});
+
+function normalizeHotel(h, i) {
+  if (!h) return null;
+  
+  let rawChannelsString = "";
+  if (Array.isArray(h.channels)) {
+    rawChannelsString = h.channels.join(",");
+  } else if (typeof h.channels === "string") {
+    rawChannelsString = h.channels;
+  } else if (h.channels) {
+    rawChannelsString = String(h.channels);
+  }
+  
+  const cleanChannelsArray = rawChannelsString
+    .split(/[|,;\n]/)
+    .map(c => c.trim())
+    .filter(Boolean);
+  
+  return { 
+    ...h, 
+    hotelName: h.hotelName || "Unnamed Account", 
+    tvPoints: Number(h.tvPoints || 0), 
+    channels: cleanChannelsArray, 
+    _row: Number(h._row || (i + 2)) 
+  };
+}
+
+async function loadFromSheet() {
+  try {
+    const res = await fetch(API_URL, { cache: "no-store" });
+    const text = await res.text();
+    const data = JSON.parse(text || "[]");
+    hotels = Array.isArray(data) ? data.map(normalizeHotel).filter(h => h !== null && h.hotelName !== "Unnamed Account") : [];
+    renderDash();
+    loadHotels();
+    if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
+    if (!document.getElementById("channels").classList.contains("hidden")) loadSummary();
+  } catch (e) {
+    console.error("System syncing trace warning trace tracking elements array properties execution captured clean: ", e);
+    hotels = [];
+    renderDash();
+    loadHotels();
+  }
+}
+
+function login() {
+  const usernameInput = document.getElementById("u").value.trim().toLowerCase();
+  const passwordInput = document.getElementById("p").value;
+
+  current = users.find(x => x.u === usernameInput && x.p === passwordInput);
+  
+  if (!current) {
+    alert("Invalid Credentials Entered. Access Denied.");
+    return;
+  }
+
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("app").style.display = "block";
+
+  userNameDisplay.innerText = current.name;
+  avatarLetter.innerText = current.name.charAt(0).toUpperCase();
+  userBadgeSlot.innerHTML = `<span class='role-badge ${current.role === 'admin' ? 'admin' : ''}'>${current.role}</span>`;
+
+  setupRole();
+  loadSales();
+  loadFromSheet();
+}
+
+function setupRole() {
+  if (current.role === "sales") {
+    channelBtn.style.display = "none";
+    deleteBtn.style.display = "block";
+  } else {
+    channelBtn.style.display = "block";
+    deleteBtn.style.display = "block";
+  }
+}
+
+function show(v) {
+  ["dash", "hotels", "channels", "add", "deletePage"].forEach(x => {
+    document.getElementById(x).classList.add("hidden");
+    document.getElementById("tab-" + x)?.classList.remove("active");
+  });
+  document.getElementById(v).classList.remove("hidden");
+  document.getElementById("tab-" + v)?.classList.add("active");
+
+  if (v === "channels") loadSummary();
+  if (v === "deletePage") loadDelete();
+  if (v === "hotels") loadHotels();
+  if (v === "dash") renderDash();
+}
+
+function getVisibleHotels() {
+  return current.role === "admin" ? hotels : hotels.filter(h => (h.salesKey || "") === current.u);
+}
+
+function getFilteredHotels() {
+  const q = (hotelSearch.value || "").trim().toLowerCase();
+  const list = getVisibleHotels();
+  if (!q) return list;
+  return list.filter(h => {
+    const hay = [h.hotelName, h.circuitId, h.salesPerson, h.type, ...(Array.isArray(h.channels) ? h.channels : [])].join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+// Internal breakdown string generator helper function
+function generateBreakdownHtml(list) {
+  const types = ["IPTV enterprise", "IPTV BIZZ", "DMATV", "AMATV", "Channel only", "Hospitality TV"];
+  return types.map(t => {
+    const count = list.filter(h => (h.type || "").trim().toLowerCase() === t.toLowerCase()).length;
+    return `
+      <div style="display: flex; justify-content: space-between;">
+        <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> ${t}:</span>
+        <strong>${count}</strong>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderDash() {
+  dashGrid.innerHTML = "";
+  if (!current) return;
+
+  if (current.role === "admin") {
+    const totalHotels = hotels.length;
+    const totalTV = hotels.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
+
+    dashGrid.innerHTML += `
+      <div class="box" style="background: linear-gradient(135deg, #1e3799 0%, #4a69bd 100%);">
+        <h3>System Global Footprint</h3>
+        <div class="stat">${totalHotels} Managed Accounts</div>
+        <p><i class="fa-solid fa-tv"></i> Across ${totalTV} Operational Displays</p>
+      </div>
+    `;
+
+    users.filter(u => u.role === "sales").forEach((u, idx) => {
+      const list = hotels.filter(h => (h.salesKey || "") === u.u);
+      const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
+      
+      const gradients = [
+        "linear-gradient(135deg, #079992 0%, #38ada9 100%)",
+        "linear-gradient(135deg, #60a3bc 0%, #3c6382 100%)",
+        "linear-gradient(135deg, #e67e22 0%, #d35400 100%)",
+        "linear-gradient(135deg, #78e08f 0%, #38ea92 100%)"
+      ];
+      const assignedBg = gradients[idx % gradients.length];
+
+      dashGrid.innerHTML += `
+        <div class="box" style="background: ${assignedBg}">
+          <h3>${u.name} Portfolio Balance</h3>
+          <div class="stat">${list.length} Accounts</div>
+          <p style="margin-bottom: 8px;"><i class="fa-solid fa-display"></i> Servicing ${tv} Terminal Points</p>
+          
+          <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">
+            ${generateBreakdownHtml(list)}
+          </div>
+        </div>
+      `;
+    });
+  } else {
+    const list = hotels.filter(h => (h.salesKey || "") === current.u);
+    const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
+
+    dashGrid.innerHTML = `
+      <div class="box" style="background: linear-gradient(135deg, #079992 0%, #38ada9 100%)">
+        <h3>Representative Managed Portfolio</h3>
+        <div class="stat">${list.length} Monitored Client Sites</div>
+        <p style="margin-bottom: 8px;"><i class="fa-solid fa-tv"></i> Tracking ${tv} Node Endpoints</p>
+        
+        <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">
+          ${generateBreakdownHtml(list)}
+        </div>
+      </div>
+    `;
+  }
+}
+
+function loadSales() {
+  if (current.role === "sales") {
+    sales.innerHTML = `<option value="${current.u}">${current.name}</option>`;
+    sales.value = current.u;
+    return;
+  }
+  sales.innerHTML = users.filter(u => u.role === "sales").map(u => `<option value="${u.u}">${u.name}</option>`).join("");
+}
+
+async function addHotel() {
+  const user = users.find(x => x.u === sales.value);
+  if (!user) { alert("Please assign a valid active manager."); return; }
+  const cleanChannelsArray = ch.value.split("\n").map(s => s.trim()).filter(Boolean);
+  const channelsString = cleanChannelsArray.join("|");
+
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      hotelName: hName.value, circuitId: cId.value, tvPoints: tv.value,
+      from: from.value, to: to.value, salesKey: user.u, salesPerson: user.name,
+      type: type.value, channels: channelsString
+    })
+  });
+
+  alert("Registry Dataset Synchronized Successfully!");
+  hName.value = ""; cId.value = ""; tv.value = ""; from.value = ""; to.value = ""; type.value = "IPTV enterprise"; ch.value = "";
+  await loadFromSheet();
+}
+
+function loadHotels() {
+  const list = getFilteredHotels();
+  window.hotelList = list;
+  hotelSelect.innerHTML = list.map((h, i) => `<option value="${i}">${h.hotelName}</option>`).join("");
+  if (list.length === 0) {
+    hotelView.innerHTML = `<div style='text-align:center; padding: 40px; color:#7f8c8d;'><p>No matching registries sync to filter bounds parameters.</p></div>`;
+    return;
+  }
+  hotelSelect.value = "0";
+  loadHotel();
+}
+
+function filterHotels() { loadHotels(); }
+
+function loadHotel() {
+  const list = window.hotelList || [];
+  const h = list[Number(hotelSelect.value)];
+  if (!h) { hotelView.innerHTML = ""; return; }
+
+  hotelView.innerHTML = `
+    <div class="display-card">
+      <h3>${h.hotelName || ""}</h3>
+      <div class="info-grid">
+        <div class="info-cell"><small>Account Strategist Rep</small><span>${h.salesPerson || ""}</span></div>
+        <div class="info-cell"><small>Circuit ID</small><span>${h.circuitId || "N/A"}</span></div>
+        <div class="info-cell"><small>Active Displays Count</small><span>${h.tvPoints || 0} Units Assigned</span></div>
+        <div class="info-cell"><small>Solution Type</small><span>${h.type || "IPTV enterprise"}</span></div>
+      </div>
+      <div>
+        <label style="margin-bottom:12px; display:block;">Active Output Stream Allocation Channels Matrix</label>
+        <div class="tag-container">
+          ${(Array.isArray(h.channels) ? h.channels : []).map(c => `<div class="channel-tag">${c}</div>`).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function del(rowNum, hotelName, salesKey) {
+  if (current.role === "sales" && salesKey !== current.u) { alert("Unauthorized access action registry restriction rules validation failed."); return; }
+  if (!confirm(`Warning: Are you completely certain you intend to purge records matching ${hotelName}? This action is irreversible.`)) return;
+
+  try {
+    await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "delete", row: Number(rowNum) }) });
+  } catch (error) {
+    console.error("Purging routine system trace mapping failure exception logs dropped clean: ", error);
+  }
+  await loadFromSheet();
+}
+
+function loadSummary() {
+  const visible = getVisibleHotels();
+  const map = {}; 
+  const countMap = {};
+  
+  visible.forEach(h => {
+    if(h && Array.isArray(h.channels)) {
+      h.channels.forEach(c => {
+        const cleanC = c.trim();
+        if (cleanC) {
+          map[cleanC] = (map[cleanC] || 0) + Number(h.tvPoints || 0);
+          countMap[cleanC] = (countMap[cleanC] || 0) + 1;
+        }
+      });
+    }
+  });
+  
+  summaryTable.innerHTML = Object.keys(map).sort().map(c => {
+    const hotelCount = countMap[c] || 0;
+    const hotelLabel = hotelCount === 1 ? "hotel" : "hotels";
+    
+    return `
+      <tr>
+        <td><strong style="color: var(--text-dark); font-size: 16px;">${c}</strong></td>
+        <td><strong style="color: var(--primary); font-size: 16px;">${map[c]}</strong> TV points</td>
+        <td><span class="role-badge" style="background: var(--accent); color: var(--primary); font-weight: 700; padding: 6px 14px;">${hotelCount} ${hotelLabel}</span></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function loadDelete() {
+  const list = getVisibleHotels();
+  if (list.length === 0) {
+    delTable.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:30px; color:#7f8c8d;">No active registries found matching user permissions limits filters.</td></tr>`;
+    return;
+  }
+  delTable.innerHTML = list.map((h) => {
+    if (!h || !h.hotelName) return "";
+    const escapedName = (h.hotelName || "").replace(/'/g, "\\'");
+    return `<tr><td><strong>${h.hotelName || ""}</strong></td><td>${h.salesPerson || ""}</td><td style="text-align: right;"><button class="btn btn-danger btn-small" onclick="del(${h._row}, '${escapedName}', '${h.salesKey || ""}')"><i class="fa-solid fa-trash"></i> Drop Profile</button></td></tr>`;
+  }).join("");
+}
+
+function logout() { location.reload(); }
+</script>
+</body>
+</html>
