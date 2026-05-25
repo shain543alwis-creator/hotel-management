@@ -390,6 +390,15 @@ function renderDash() {
   dashGrid.innerHTML = "";
   if (!current) return;
 
+  // Dynamically compile every unique solution type found in the current sheet dataset
+  const dynamicTypes = ["IPTV", "MATV", "DMATV"];
+  hotels.forEach(h => {
+    const t = (h.type || "").trim().toUpperCase();
+    if (t && !dynamicTypes.includes(t)) {
+      dynamicTypes.push(t);
+    }
+  });
+
   if (current.role === "admin") {
     const totalHotels = hotels.length;
     const totalTV = hotels.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
@@ -406,11 +415,6 @@ function renderDash() {
       const list = hotels.filter(h => (h.salesKey || "") === u.u);
       const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
       
-      // Calculate dynamic solutions counts
-      const iptvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "IPTV").length;
-      const matvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "MATV").length;
-      const dmatvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "DMATV").length;
-      
       const gradients = [
         "linear-gradient(135deg, #079992 0%, #38ada9 100%)",
         "linear-gradient(135deg, #60a3bc 0%, #3c6382 100%)",
@@ -419,6 +423,18 @@ function renderDash() {
       ];
       const assignedBg = gradients[idx % gradients.length];
 
+      // Build completely dynamic breakdown list for this representative
+      let solutionBreakdownHtml = "";
+      dynamicTypes.forEach(type => {
+        const typeCount = list.filter(h => (h.type || "").trim().toUpperCase() === type).length;
+        solutionBreakdownHtml += `
+          <div style="display: flex; justify-content: space-between;">
+            <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 6px;"></i> ${type} Accounts:</span>
+            <strong>${typeCount}</strong>
+          </div>
+        `;
+      });
+
       dashGrid.innerHTML += `
         <div class="box" style="background: ${assignedBg}">
           <h3>${u.name} Portfolio Balance</h3>
@@ -426,18 +442,7 @@ function renderDash() {
           <p style="margin-bottom: 8px;"><i class="fa-solid fa-display"></i> Servicing ${tv} Terminal Points</p>
           
           <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">
-            <div style="display: flex; justify-content: space-between;">
-              <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> IPTV Accounts:</span>
-              <strong>${iptvCount}</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> MATV Accounts:</span>
-              <strong>${matvCount}</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> DMATV Accounts:</span>
-              <strong>${dmatvCount}</strong>
-            </div>
+            ${solutionBreakdownHtml}
           </div>
         </div>
       `;
@@ -446,10 +451,16 @@ function renderDash() {
     const list = hotels.filter(h => (h.salesKey || "") === current.u);
     const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
     
-    // Calculate personal profile solution counts
-    const iptvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "IPTV").length;
-    const matvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "MATV").length;
-    const dmatvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "DMATV").length;
+    let solutionBreakdownHtml = "";
+    dynamicTypes.forEach(type => {
+      const typeCount = list.filter(h => (h.type || "").trim().toUpperCase() === type).length;
+      solutionBreakdownHtml += `
+        <div style="display: flex; justify-content: space-between;">
+          <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 6px;"></i> ${type} Accounts:</span>
+          <strong>${typeCount}</strong>
+        </div>
+      `;
+    });
 
     dashGrid.innerHTML = `
       <div class="box" style="background: linear-gradient(135deg, #079992 0%, #38ada9 100%)">
@@ -458,18 +469,7 @@ function renderDash() {
         <p style="margin-bottom: 8px;"><i class="fa-solid fa-tv"></i> Tracking ${tv} Node Endpoints</p>
         
         <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">
-          <div style="display: flex; justify-content: space-between;">
-            <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> IPTV Accounts:</span>
-            <strong>${iptvCount}</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between;">
-            <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> MATV Accounts:</span>
-            <strong>${matvCount}</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between;">
-            <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> DMATV Accounts:</span>
-            <strong>${dmatvCount}</strong>
-          </div>
+          ${solutionBreakdownHtml}
         </div>
       </div>
     `;
