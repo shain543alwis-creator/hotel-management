@@ -406,7 +406,7 @@ function renderDash() {
       const list = hotels.filter(h => (h.salesKey || "") === u.u);
       const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
       
-      // Calculate active solution breakdowns dynamically
+      // Calculate dynamic solutions counts
       const iptvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "IPTV").length;
       const matvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "MATV").length;
       const dmatvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "DMATV").length;
@@ -424,9 +424,21 @@ function renderDash() {
           <h3>${u.name} Portfolio Balance</h3>
           <div class="stat">${list.length} Accounts</div>
           <p style="margin-bottom: 8px;"><i class="fa-solid fa-display"></i> Servicing ${tv} Terminal Points</p>
-          <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 12px; font-weight: 500; line-height: 1.5;">
-            <i class="fa-solid fa-layer-group"></i> IPTV: <strong>${iptvCount}</strong> &nbsp;|&nbsp; MATV: <strong>${matvCount}</strong> &nbsp;|&nbsp; DMATV: <strong>${dmatvCount}</strong>
-          </p>
+          
+          <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">
+            <div style="display: flex; justify-content: space-between;">
+              <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> IPTV Accounts:</span>
+              <strong>${iptvCount}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> MATV Accounts:</span>
+              <strong>${matvCount}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> DMATV Accounts:</span>
+              <strong>${dmatvCount}</strong>
+            </div>
+          </div>
         </div>
       `;
     });
@@ -434,7 +446,7 @@ function renderDash() {
     const list = hotels.filter(h => (h.salesKey || "") === current.u);
     const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
     
-    // Calculate personal profile solution breakdown metrics
+    // Calculate personal profile solution counts
     const iptvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "IPTV").length;
     const matvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "MATV").length;
     const dmatvCount = list.filter(h => (h.type || "").trim().toUpperCase() === "DMATV").length;
@@ -444,9 +456,21 @@ function renderDash() {
         <h3>Representative Managed Portfolio</h3>
         <div class="stat">${list.length} Monitored Client Sites</div>
         <p style="margin-bottom: 8px;"><i class="fa-solid fa-tv"></i> Tracking ${tv} Node Endpoints</p>
-        <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 12px; font-weight: 500; line-height: 1.5;">
-          <i class="fa-solid fa-layer-group"></i> IPTV: <strong>${iptvCount}</strong> &nbsp;|&nbsp; MATV: <strong>${matvCount}</strong> &nbsp;|&nbsp; DMATV: <strong>${dmatvCount}</strong>
-        </p>
+        
+        <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">
+          <div style="display: flex; justify-content: space-between;">
+            <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> IPTV Accounts:</span>
+            <strong>${iptvCount}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> MATV Accounts:</span>
+            <strong>${matvCount}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> DMATV Accounts:</span>
+            <strong>${dmatvCount}</strong>
+          </div>
+        </div>
       </div>
     `;
   }
