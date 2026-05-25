@@ -74,7 +74,7 @@
 
         /* Navigation Menu Row */
         .nav-bar { display: flex; background: #2c3e50; padding: 5px; overflow-x: auto; }
-        .nav-bar button { background: transparent; color: #a4b0be; border: none; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; border-radius: 4px; display: flex; align-items: center; gap: 8px; }
+        .nav-bar button { background: transparent; color: #a4b0be; border: none; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; border-radius: 4px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
         .nav-bar button:hover { color: #fff; background: rgba(255,255,255,0.1); }
         .nav-bar button.active { background: var(--accent); color: var(--primary); }
 
@@ -154,10 +154,10 @@
 
         <div class="nav-bar" id="navigationTabsPool">
             <button id="tab-dash" onclick="show('dash')" class="active"><i class="fa-solid fa-gauge"></i> Dashboard</button>
-            <button id="tab-hotels" onclick="show('hotels')"><i class="fa-solid fa-folder-open"></i> Catalog View</button>
-            <button id="tab-add" onclick="show('add')"><i class="fa-solid fa-plus-circle"></i> Add Registry Entry</button>
-            <button id="deleteBtn" onclick="show('deletePage')"><i class="fa-solid fa-sliders"></i> Manage Records</button>
-            <button id="channelBtn" onclick="show('channels')"><i class="fa-solid fa-tv"></i> Allocation Summary</button>
+            <button id="tab-hotels" onclick="show('hotels')"><i class="fa-solid fa-folder-open"></i> Hotel details</button>
+            <button id="tab-add" onclick="show('add')"><i class="fa-solid fa-plus-circle"></i> Add New Hotel</button>
+            <button id="deleteBtn" onclick="show('deletePage')"><i class="fa-solid fa-sliders"></i> Manage Hotels</button>
+            <button id="channelBtn" onclick="show('channels')"><i class="fa-solid fa-tv"></i> Channel Utilization</button>
         </div>
 
         <div class="main-content">
@@ -297,7 +297,6 @@ function normalizeHotel(h, i) {
     rawChannelsString = String(h.channels);
   }
   
-  // Re-split using target pipe separator matrix matches expected backend format structure
   const cleanChannelsArray = rawChannelsString
     .split(/[|,;\n]/)
     .map(c => c.trim())
