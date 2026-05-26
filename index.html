@@ -91,34 +91,32 @@
         .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
         .channel-tag { background: #e8f0fe; color: var(--primary); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid #c7d9f9; }
 
-        /* Modified To Render Line By Line To The Down Side */
         .checkbox-matrix-container { 
-            max-height: 260px; 
+            max-height: 320px; 
             overflow-y: auto; 
             border: 1px solid var(--border-color); 
-            padding: 15px; 
+            padding: 10px; 
             border-radius: 6px; 
             background: var(--bg-light); 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
+            display: block; 
             margin-bottom: 25px; 
         }
         .checkbox-item { 
             display: flex; 
             align-items: center; 
-            gap: 12px; 
-            font-size: 14px; 
+            gap: 14px; 
+            font-size: 15px; 
             font-weight: 500; 
             cursor: pointer; 
-            padding: 6px 8px; 
-            border-bottom: 1px solid rgba(220, 221, 225, 0.4); 
+            padding: 10px 12px; 
+            border-bottom: 1px solid #e8ecef; 
+            width: 100%; 
+            box-sizing: border-box;
         }
         .checkbox-item:last-child { border-bottom: none; }
-        .checkbox-item:hover { background-color: rgba(30, 55, 153, 0.04); border-radius: 4px; }
-        .checkbox-item input { width: 18px; height: 18px; cursor: pointer; }
+        .checkbox-item:hover { background-color: rgba(30, 55, 153, 0.05); }
+        .checkbox-item input { width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
 
-        /* Overlay Sub-Page Modal Styles */
         .page-overlay-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 999; }
         .modal-subpage-box { background: white; width: 100%; max-width: 650px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); overflow: hidden; border-top: 6px solid var(--primary); }
         .modal-header { background: var(--bg-light); padding: 20px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
@@ -140,6 +138,10 @@
         .btn-danger { background: var(--danger); }
         .btn-danger:hover { background: #ff4d4d; }
         .btn-small { padding: 6px 12px; font-size: 13px; border-radius: 4px; }
+        
+        /* Compact inline badges inside the history table view */
+        .history-tag { display: inline-block; background: #ebeec5; color: #5d530e; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: 600; margin: 2px; border: 1px solid #d4da9b; }
+        .history-tag.new { background: #d4edda; color: #155724; border-color: #c3e6cb; }
     </style>
 </head>
 <body>
@@ -183,6 +185,7 @@
             <button id="tab-add" onclick="show('add')"><i class="fa-solid fa-plus-circle"></i> Add New Hotel</button>
             <button id="deleteBtn" onclick="show('deletePage')"><i class="fa-solid fa-sliders"></i> Manage Hotels</button>
             <button id="channelBtn" onclick="show('channels')"><i class="fa-solid fa-tv"></i> Channel Utilization</button>
+            <button id="historyBtn" onclick="show('history')"><i class="fa-solid fa-history"></i> Swap History Log</button>
         </div>
 
         <div class="main-content">
@@ -247,8 +250,7 @@
                 </select>
                 
                 <label>Select the channel list</label>
-                <div id="addHotelCheckboxMatrix" class="checkbox-matrix-container">
-                    </div>
+                <div id="addHotelCheckboxMatrix" class="checkbox-matrix-container"></div>
                 
                 <button class="btn" onclick="addHotel()">
                     <i class="fa-solid fa-cloud-arrow-up"></i> Save Profile Record Changes
@@ -286,6 +288,24 @@
                     </table>
                 </div>
             </div>
+
+            <div id="history" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Security Auditing & Channel Swap Logs</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">Execution Date</th>
+                                <th style="width: 20%;">Hotel Property</th>
+                                <th style="width: 25%;">Previous Allocation Lineup</th>
+                                <th style="width: 25%;">Updated Destination Lineup</th>
+                                <th style="width: 15%;">Authorized User</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTable"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -297,8 +317,7 @@
             </div>
             <div class="modal-body">
                 <p style="font-size: 13px; color: #7f8c8d; margin-bottom: 20px;">Review the existing channel lineup configuration list. Map any channel item row directly to a replacement master choice dropdown alternative.</p>
-                <div id="swapRowsContainer">
-                    </div>
+                <div id="swapRowsContainer"></div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-danger btn-small" onclick="closeChannelSwapPage()">Cancel</button>
@@ -322,6 +341,7 @@ const users = [
 let current = null;
 let hotels = [];
 let globalMasterChannels = []; 
+let globalSwapLogs = []; 
 let activeEditingRowId = null; 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -330,23 +350,19 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("p").addEventListener("keydown", catchEnter);
 });
 
+function extractLeadingNumber(str) {
+    const match = String(str).match(/\d+/);
+    return match ? parseInt(match[0], 10) : Infinity;
+}
+
 function normalizeHotel(h, i) {
   if (!h) return null;
-  
   let rawChannelsString = "";
-  if (Array.isArray(h.channels)) {
-    rawChannelsString = h.channels.join("|");
-  } else if (typeof h.channels === "string") {
-    rawChannelsString = h.channels;
-  } else if (h.channels) {
-    rawChannelsString = String(h.channels);
-  }
+  if (Array.isArray(h.channels)) rawChannelsString = h.channels.join("|");
+  else if (typeof h.channels === "string") rawChannelsString = h.channels;
+  else if (h.channels) rawChannelsString = String(h.channels);
   
-  const cleanChannelsArray = rawChannelsString
-    .split(/[|,;\n]/)
-    .map(c => c.trim())
-    .filter(Boolean);
-  
+  const cleanChannelsArray = rawChannelsString.split(/[|,;\n]/).map(c => c.trim()).filter(Boolean);
   return { 
     ...h, 
     hotelName: h.hotelName || "Unnamed Account", 
@@ -360,13 +376,19 @@ async function loadFromSheet() {
   try {
     const res = await fetch(API_URL, { cache: "no-store" });
     const text = await res.text();
-    const parsedPayload = JSON.parse(text || '{"hotels":[],"masterChannels":[]}');
+    const parsedPayload = JSON.parse(text || '{"hotels":[],"masterChannels":[],"swapHistory":[]}');
     
     let rawChannels = parsedPayload.masterChannels || [];
-    
-    // Forces natural numerical order sorting (e.g., 1, 2, 10 instead of 1, 10, 2)
-    rawChannels.sort((a, b) => String(a).localeCompare(String(b), undefined, {numeric: true, sensitivity: 'base'}));
+    rawChannels.sort((a, b) => {
+        const numA = extractLeadingNumber(a);
+        const numB = extractLeadingNumber(b);
+        if (numA !== numB) return numA - numB;
+        return String(a).localeCompare(String(b));
+    });
     globalMasterChannels = rawChannels;
+    
+    // Save backend logs history globally
+    globalSwapLogs = parsedPayload.swapHistory || [];
     
     const data = parsedPayload.hotels || [];
     hotels = Array.isArray(data) ? data.map(normalizeHotel).filter(h => h !== null && h.hotelName !== "Unnamed Account") : [];
@@ -377,6 +399,7 @@ async function loadFromSheet() {
     
     if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
     if (!document.getElementById("channels").classList.contains("hidden")) loadSummary();
+    if (!document.getElementById("history").classList.contains("hidden")) renderHistoryLogPage();
   } catch (e) {
     console.error("System sync synchronization error: ", e);
     hotels = [];
@@ -385,15 +408,13 @@ async function loadFromSheet() {
   }
 }
 
-// Renders Master Channel list vertically down row-by-row
 function renderChannelCheckboxes() {
     const boxMatrix = document.getElementById("addHotelCheckboxMatrix");
     if (!globalMasterChannels || globalMasterChannels.length === 0) {
-        boxMatrix.innerHTML = `<span style="color:#7f8c8d; font-size:13px;">No options saved on 'ChannelList' Google Sheet tab.</span>`;
+        boxMatrix.innerHTML = `<span style="color:#7f8c8d; font-size:13px; padding: 10px; display:block;">No options saved on 'ChannelList' Google Sheet tab.</span>`;
         return;
     }
-    
-    boxMatrix.innerHTML = globalMasterChannels.map((chan, idx) => `
+    boxMatrix.innerHTML = globalMasterChannels.map((chan) => `
         <label class="checkbox-item">
             <input type="checkbox" value="${chan}" class="hotel-add-chan-checkbox">
             <span>${chan}</span>
@@ -406,11 +427,7 @@ function login() {
   const passwordInput = document.getElementById("p").value;
 
   current = users.find(x => x.u === usernameInput && x.p === passwordInput);
-  
-  if (!current) {
-    alert("Invalid Credentials Entered. Access Denied.");
-    return;
-  }
+  if (!current) { alert("Invalid Credentials Entered. Access Denied."); return; }
 
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("app").style.display = "block";
@@ -424,18 +441,21 @@ function login() {
   loadFromSheet();
 }
 
+// RESTORED SECURITY CONTROL FILTER ENGINE
 function setupRole() {
   if (current.role === "sales") {
     channelBtn.style.display = "none";
+    historyBtn.style.display = "none"; // Hide completely for sales accounts
     deleteBtn.style.display = "block";
   } else {
     channelBtn.style.display = "block";
+    historyBtn.style.display = "block"; // Show completely for admin accounts
     deleteBtn.style.display = "block";
   }
 }
 
 function show(v) {
-  ["dash", "hotels", "channels", "add", "deletePage"].forEach(x => {
+  ["dash", "hotels", "channels", "add", "deletePage", "history"].forEach(x => {
     document.getElementById(x).classList.add("hidden");
     document.getElementById("tab-" + x)?.classList.remove("active");
   });
@@ -446,6 +466,7 @@ function show(v) {
   if (v === "deletePage") loadDelete();
   if (v === "hotels") loadHotels();
   if (v === "dash") renderDash();
+  if (v === "history") renderHistoryLogPage();
 }
 
 function getVisibleHotels() {
@@ -466,12 +487,7 @@ function generateBreakdownHtml(list) {
   const types = ["IPTV enterprise", "IPTV BIZZ", "DMATV", "AMATV", "Channel only", "Hospitality TV"];
   return types.map(t => {
     const count = list.filter(h => (h.type || "").trim().toLowerCase() === t.toLowerCase()).length;
-    return `
-      <div style="display: flex; justify-content: space-between;">
-        <span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> ${t}:</span>
-        <strong>${count}</strong>
-      </div>
-    `;
+    return `<div style="display: flex; justify-content: space-between;"><span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> ${t}:</span><strong>${count}</strong></div>`;
   }).join("");
 }
 
@@ -482,7 +498,6 @@ function renderDash() {
   if (current.role === "admin") {
     const totalHotels = hotels.length;
     const totalTV = hotels.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
-
     dashGrid.innerHTML += `
       <div class="box" style="background: linear-gradient(135deg, #1e3799 0%, #4a69bd 100%);">
         <h3>System Global Footprint</h3>
@@ -490,44 +505,28 @@ function renderDash() {
         <p><i class="fa-solid fa-tv"></i> Across ${totalTV} Operational Displays</p>
       </div>
     `;
-
     users.filter(u => u.role === "sales").forEach((u, idx) => {
       const list = hotels.filter(h => (h.salesKey || "") === u.u);
       const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
-      
-      const gradients = [
-        "linear-gradient(135deg, #079992 0%, #38ada9 100%)",
-        "linear-gradient(135deg, #60a3bc 0%, #3c6382 100%)",
-        "linear-gradient(135deg, #e67e22 0%, #d35400 100%)",
-        "linear-gradient(135deg, #78e08f 0%, #38ea92 100%)"
-      ];
-      const assignedBg = gradients[idx % gradients.length];
-
+      const gradients = ["linear-gradient(135deg, #079992 0%, #38ada9 100%)", "linear-gradient(135deg, #60a3bc 0%, #3c6382 100%)", "linear-gradient(135deg, #e67e22 0%, #d35400 100%)", "linear-gradient(135deg, #78e08f 0%, #38ea92 100%)"];
       dashGrid.innerHTML += `
-        <div class="box" style="background: ${assignedBg}">
+        <div class="box" style="background: ${gradients[idx % gradients.length]}">
           <h3>${u.name} Portfolio Balance</h3>
           <div class="stat">${list.length} Accounts</div>
           <p style="margin-bottom: 8px;"><i class="fa-solid fa-display"></i> Servicing ${tv} Terminal Points</p>
-          
-          <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">
-            ${generateBreakdownHtml(list)}
-          </div>
+          <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">${generateBreakdownHtml(list)}</div>
         </div>
       `;
     });
   } else {
     const list = hotels.filter(h => (h.salesKey || "") === current.u);
     const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
-
     dashGrid.innerHTML = `
       <div class="box" style="background: linear-gradient(135deg, #079992 0%, #38ada9 100%)">
         <h3>Representative Managed Portfolio</h3>
         <div class="stat">${list.length} Monitored Client Sites</div>
         <p style="margin-bottom: 8px;"><i class="fa-solid fa-tv"></i> Tracking ${tv} Node Endpoints</p>
-        
-        <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">
-          ${generateBreakdownHtml(list)}
-        </div>
+        <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">${generateBreakdownHtml(list)}</div>
       </div>
     `;
   }
@@ -545,7 +544,6 @@ function loadSales() {
 async function addHotel() {
   const user = users.find(x => x.u === sales.value);
   if (!user) { alert("Please assign a valid active manager."); return; }
-  
   const checkedInputElements = document.querySelectorAll(".hotel-add-chan-checkbox:checked");
   const cleanChannelsArray = Array.from(checkedInputElements).map(el => el.value);
 
@@ -566,7 +564,6 @@ async function addHotel() {
 
   alert("Registry Dataset Synchronized Successfully!");
   hName.value = ""; cId.value = ""; tv.value = ""; from.value = ""; to.value = ""; type.value = "IPTV enterprise";
-  
   document.querySelectorAll(".hotel-add-chan-checkbox:checked").forEach(el => el.checked = false);
   await loadFromSheet();
 }
@@ -590,9 +587,8 @@ function loadHotel() {
   const h = list[Number(hotelSelect.value)];
   if (!h) { hotelView.innerHTML = ""; return; }
 
-  const channelTagsHtml = (Array.isArray(h.channels) ? h.channels : []).map(c => `
-    <div class="channel-tag">${c}</div>
-  `).join("");
+  const sortedChannelsView = [...(h.channels || [])].sort((a,b) => extractLeadingNumber(a) - extractLeadingNumber(b));
+  const channelTagsHtml = sortedChannelsView.map(c => `<div class="channel-tag">${c}</div>`).join("");
 
   hotelView.innerHTML = `
     <div class="display-card">
@@ -610,9 +606,7 @@ function loadHotel() {
       </div>
       <div>
         <label style="margin-bottom:12px; display:block;">Operational Allocation Channels Matrix</label>
-        <div class="tag-container">
-          ${channelTagsHtml || '<span style="color:#7f8c8d; font-size:13px;">No channels allocated to this profile yet.</span>'}
-        </div>
+        <div class="tag-container">${channelTagsHtml || '<span style="color:#7f8c8d; font-size:13px;">No channels allocated to this profile yet.</span>'}</div>
       </div>
     </div>
   `;
@@ -632,11 +626,9 @@ function openChannelSwapPage(rowId) {
         return;
     }
 
-    hotelObj.channels.forEach((currentChan, index) => {
-        let dropdownHtml = globalMasterChannels.map(mChan => `
-            <option value="${mChan}" ${mChan === currentChan ? 'selected' : ''}>${mChan}</option>
-        `).join('');
-
+    const sortedCurrentLineup = [...hotelObj.channels].sort((a,b) => extractLeadingNumber(a) - extractLeadingNumber(b));
+    sortedCurrentLineup.forEach((currentChan, index) => {
+        let dropdownHtml = globalMasterChannels.map(mChan => `<option value="${mChan}" ${mChan === currentChan ? 'selected' : ''}>${mChan}</option>`).join('');
         const rowElement = document.createElement("div");
         rowElement.className = "swap-row-item";
         rowElement.innerHTML = `
@@ -648,7 +640,6 @@ function openChannelSwapPage(rowId) {
         `;
         container.appendChild(rowElement);
     });
-
     document.getElementById("channelSwapModal").classList.remove("hidden");
 }
 
@@ -659,13 +650,12 @@ function closeChannelSwapPage() {
 
 async function saveChannelSwapModifications() {
     if (!activeEditingRowId) return;
+    const hotelObj = hotels.find(h => h._row === activeEditingRowId);
+    if (!hotelObj) return;
     
     const selectFields = document.querySelectorAll(".swap-dropdown-select-element");
     const mutatedChannelsArray = [];
-    
-    selectFields.forEach(select => {
-        if(select.value) mutatedChannelsArray.push(select.value);
-    });
+    selectFields.forEach(select => { if(select.value) mutatedChannelsArray.push(select.value); });
 
     try {
         await fetch(API_URL, {
@@ -673,10 +663,12 @@ async function saveChannelSwapModifications() {
             body: JSON.stringify({
                 action: "updateChannels",
                 row: Number(activeEditingRowId),
+                hotelName: hotelObj.hotelName, // Log contextual references 
+                swappedBy: current.name,      // Pass authorized user signature
                 channels: mutatedChannelsArray
             })
         });
-        alert("Channel lineup settings saved successfully on Google Sheet!");
+        alert("Channel lineup settings saved and logged successfully!");
         closeChannelSwapPage();
         await loadFromSheet();
     } catch(err) {
@@ -685,23 +677,54 @@ async function saveChannelSwapModifications() {
     }
 }
 
+// RENDER INTERFACE PANEL FOR ADMIN AUDIT SHEET
+function renderHistoryLogPage() {
+    if (current.role !== "admin") {
+        historyTable.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">Access Denied. Admin Permissions required.</td></tr>`;
+        return;
+    }
+    if (globalSwapLogs.length === 0) {
+        historyTable.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#7f8c8d;">No historical swaps registered in dataset archive yet.</td></tr>`;
+        return;
+    }
+    
+    // Reverse array to display the newest events at the very top chronological position
+    const historicalFeed = [...globalSwapLogs].reverse();
+    
+    historyTable.innerHTML = historicalFeed.map(log => {
+        // Render comma-split rows out of pipe separated dataset vectors cleanly
+        const parsedOld = String(log.oldLineup || "").split("|").map(x => `<span class="history-tag">${x}</span>`).join("");
+        const parsedNew = String(log.newLineup || "").split("|").map(x => `<span class="history-tag history-tag.new">${x}</span>`).join("");
+        
+        // Format ISO stamp strings to standard local format text display
+        let displayDate = log.timestamp;
+        try { if(log.timestamp) displayDate = new Date(log.timestamp).toLocaleString(); } catch(ex){}
+
+        return `
+          <tr>
+            <td><small style="color:#7f8c8d; font-weight:600;">${displayDate}</small></td>
+            <td><strong style="color:var(--primary);">${log.hotelName || "Unknown Property"}</strong></td>
+            <td><div style="max-height:80px; overflow-y:auto;">${parsedOld || "None"}</div></td>
+            <td><div style="max-height:80px; overflow-y:auto;">${parsedNew || "None"}</div></td>
+            <td><span class="role-badge" style="background:#dcdde1; color:var(--text-dark);">${log.swappedBy || "System"}</span></td>
+          </tr>
+        `;
+    }).join("");
+}
+
 async function del(rowNum, hotelName, salesKey) {
   if (current.role === "sales" && salesKey !== current.u) { alert("Unauthorized operational permissions violation."); return; }
   if (!confirm(`Warning: Are you completely certain you intend to purge records matching ${hotelName}? This action is irreversible.`)) return;
 
   try {
     await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "delete", row: Number(rowNum) }) });
-  } catch (error) {
-    console.error("Purge operations trace error: ", error);
-  }
+  } catch (error) { console.error("Purge operations trace error: ", error); }
   await loadFromSheet();
 }
 
 function loadSummary() {
   const visible = getVisibleHotels();
-  const map = {}; 
-  const countMap = {};
-  
+  const map = {}; const countMap = {};
   visible.forEach(h => {
     if(h && Array.isArray(h.channels)) {
       h.channels.forEach(c => {
@@ -713,18 +736,9 @@ function loadSummary() {
       });
     }
   });
-  
-  summaryTable.innerHTML = Object.keys(map).sort((a,b) => String(a).localeCompare(String(b), undefined, {numeric: true})).map(c => {
+  summaryTable.innerHTML = Object.keys(map).sort((a,b) => extractLeadingNumber(a) - extractLeadingNumber(b)).map(c => {
     const hotelCount = countMap[c] || 0;
-    const hotelLabel = hotelCount === 1 ? "hotel" : "hotels";
-    
-    return `
-      <tr>
-        <td><strong style="color: var(--text-dark); font-size: 16px;">${c}</strong></td>
-        <td><strong style="color: var(--primary); font-size: 16px;">${map[c]}</strong> TV points</td>
-        <td><span class="role-badge" style="background: var(--accent); color: var(--primary); font-weight: 700; padding: 6px 14px;">${hotelCount} ${hotelLabel}</span></td>
-      </tr>
-    `;
+    return `<tr><td><strong style="color: var(--text-dark); font-size: 16px;">${c}</strong></td><td><strong style="color: var(--primary); font-size: 16px;">${map[c]}</strong> TV points</td><td><span class="role-badge" style="background: var(--accent); color: var(--primary); font-weight: 700; padding: 6px 14px;">${hotelCount} ${hotelCount === 1 ? 'hotel' : 'hotels'}</span></td></tr>`;
   }).join("");
 }
 
