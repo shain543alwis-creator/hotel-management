@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -92,10 +91,32 @@
         .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
         .channel-tag { background: #e8f0fe; color: var(--primary); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid #c7d9f9; }
 
-        /* Scrollable Checkbox Matrix UI Component */
-        .checkbox-matrix-container { max-height: 220px; overflow-y: auto; border: 1px solid var(--border-color); padding: 15px; border-radius: 6px; background: var(--bg-light); display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 25px; }
-        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; cursor: pointer; padding: 4px; }
-        .checkbox-item input { width: 16px; height: 16px; cursor: pointer; }
+        /* Modified To Render Line By Line To The Down Side */
+        .checkbox-matrix-container { 
+            max-height: 260px; 
+            overflow-y: auto; 
+            border: 1px solid var(--border-color); 
+            padding: 15px; 
+            border-radius: 6px; 
+            background: var(--bg-light); 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            margin-bottom: 25px; 
+        }
+        .checkbox-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            font-size: 14px; 
+            font-weight: 500; 
+            cursor: pointer; 
+            padding: 6px 8px; 
+            border-bottom: 1px solid rgba(220, 221, 225, 0.4); 
+        }
+        .checkbox-item:last-child { border-bottom: none; }
+        .checkbox-item:hover { background-color: rgba(30, 55, 153, 0.04); border-radius: 4px; }
+        .checkbox-item input { width: 18px; height: 18px; cursor: pointer; }
 
         /* Overlay Sub-Page Modal Styles */
         .page-overlay-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 999; }
@@ -225,7 +246,7 @@
                     <option value="Hospitality TV">Hospitality TV</option>
                 </select>
                 
-                <label>Select Allocation Channels Matrix (From Master List)</label>
+                <label>Select the channel list</label>
                 <div id="addHotelCheckboxMatrix" class="checkbox-matrix-container">
                     </div>
                 
@@ -341,9 +362,13 @@ async function loadFromSheet() {
     const text = await res.text();
     const parsedPayload = JSON.parse(text || '{"hotels":[],"masterChannels":[]}');
     
-    globalMasterChannels = parsedPayload.masterChannels || [];
-    const data = parsedPayload.hotels || [];
+    let rawChannels = parsedPayload.masterChannels || [];
     
+    // Forces natural numerical order sorting (e.g., 1, 2, 10 instead of 1, 10, 2)
+    rawChannels.sort((a, b) => String(a).localeCompare(String(b), undefined, {numeric: true, sensitivity: 'base'}));
+    globalMasterChannels = rawChannels;
+    
+    const data = parsedPayload.hotels || [];
     hotels = Array.isArray(data) ? data.map(normalizeHotel).filter(h => h !== null && h.hotelName !== "Unnamed Account") : [];
     
     renderChannelCheckboxes();
@@ -360,11 +385,11 @@ async function loadFromSheet() {
   }
 }
 
-// Renders Master Channel list as responsive interactive checkbox list elements
+// Renders Master Channel list vertically down row-by-row
 function renderChannelCheckboxes() {
     const boxMatrix = document.getElementById("addHotelCheckboxMatrix");
     if (!globalMasterChannels || globalMasterChannels.length === 0) {
-        boxMatrix.innerHTML = `<span style="color:#7f8c8d; font-size:13px; grid-column: 1/-1;">No options saved on 'ChannelList' Google Sheet tab.</span>`;
+        boxMatrix.innerHTML = `<span style="color:#7f8c8d; font-size:13px;">No options saved on 'ChannelList' Google Sheet tab.</span>`;
         return;
     }
     
@@ -521,7 +546,6 @@ async function addHotel() {
   const user = users.find(x => x.u === sales.value);
   if (!user) { alert("Please assign a valid active manager."); return; }
   
-  // Extract channels from selected checkbox items
   const checkedInputElements = document.querySelectorAll(".hotel-add-chan-checkbox:checked");
   const cleanChannelsArray = Array.from(checkedInputElements).map(el => el.value);
 
@@ -543,7 +567,6 @@ async function addHotel() {
   alert("Registry Dataset Synchronized Successfully!");
   hName.value = ""; cId.value = ""; tv.value = ""; from.value = ""; to.value = ""; type.value = "IPTV enterprise";
   
-  // Uncheck all items
   document.querySelectorAll(".hotel-add-chan-checkbox:checked").forEach(el => el.checked = false);
   await loadFromSheet();
 }
@@ -595,7 +618,6 @@ function loadHotel() {
   `;
 }
 
-// OPEN DEDICATED CHANNEL SWAP OVERLAY PAGE
 function openChannelSwapPage(rowId) {
     activeEditingRowId = rowId;
     const hotelObj = hotels.find(h => h._row === rowId);
@@ -610,7 +632,6 @@ function openChannelSwapPage(rowId) {
         return;
     }
 
-    // Build subpage list rows mapping each current channel to an alternative choice drop-down
     hotelObj.channels.forEach((currentChan, index) => {
         let dropdownHtml = globalMasterChannels.map(mChan => `
             <option value="${mChan}" ${mChan === currentChan ? 'selected' : ''}>${mChan}</option>
@@ -636,14 +657,12 @@ function closeChannelSwapPage() {
     activeEditingRowId = null;
 }
 
-// SAVES BULK MODIFICATIONS COMPLETED INSIDE INTERACTIVE ENGINE SUB-PAGE
 async function saveChannelSwapModifications() {
     if (!activeEditingRowId) return;
     
     const selectFields = document.querySelectorAll(".swap-dropdown-select-element");
     const mutatedChannelsArray = [];
     
-    // Read selections out of dropdown elements sequentially
     selectFields.forEach(select => {
         if(select.value) mutatedChannelsArray.push(select.value);
     });
@@ -689,13 +708,13 @@ function loadSummary() {
         const cleanC = c.trim();
         if (cleanC) {
           map[cleanC] = (map[cleanC] || 0) + Number(h.tvPoints || 0);
-          countMap[cleanC] = (countMap[countMap] || 0) + 1;
+          countMap[cleanC] = (countMap[cleanC] || 0) + 1;
         }
       });
     }
   });
   
-  summaryTable.innerHTML = Object.keys(map).sort().map(c => {
+  summaryTable.innerHTML = Object.keys(map).sort((a,b) => String(a).localeCompare(String(b), undefined, {numeric: true})).map(c => {
     const hotelCount = countMap[c] || 0;
     const hotelLabel = hotelCount === 1 ? "hotel" : "hotels";
     
@@ -726,3 +745,4 @@ function logout() { location.reload(); }
 </script>
 </body>
 </html>
+
