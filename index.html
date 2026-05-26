@@ -151,4 +151,43 @@
             <h2>Hotel Management</h2>
             <p>Access the Allocation Distribution Node</p>
             
-            <label for="u">Username</
+            <label for="u">Username</label>
+            <input type="text" id="u" placeholder="Enter username" autocomplete="off">
+            
+            <label for="p">Password</label>
+            <input type="password" id="p" placeholder="Enter password" autocomplete="off">
+            
+            <button class="btn" style="width: 100%; justify-content: center;" onclick="login()">
+                <span>Secure Sign In</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="app" class="app-container" style="display: none;">
+        <div class="app-banner">
+            <h1><i class="fa-solid fa-hotel" style="color: var(--accent);"></i> Channel Distribution Portal</h1>
+            <div class="user-panel">
+                <div class="avatar" id="avatarLetter">A</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 15px;" id="userNameDisplay">User</div>
+                    <div id="userBadgeSlot"></div>
+                </div>
+                <button class="btn btn-danger btn-small" onclick="logout()" style="margin-left: 10px;">
+                    <i class="fa-solid fa-power-off"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-bar" id="navigationTabsPool">
+            <button id="tab-dash" onclick="show('dash')" class="active"><i class="fa-solid fa-gauge"></i> Dashboard</button>
+            <button id="tab-hotels" onclick="show('hotels')"><i class="fa-solid fa-folder-open"></i> Hotel details</button>
+            <button id="tab-add" onclick="show('add')"><i class="fa-solid fa-plus-circle"></i> Add New Hotel</button>
+            <button id="deleteBtn" onclick="show('deletePage')"><i class="fa-solid fa-sliders"></i> Manage Hotels</button>
+            <button id="channelBtn" onclick="show('channels')"><i class="fa-solid fa-tv"></i> Channel Utilization</button>
+            <button id="historyBtn" onclick="show('history')"><i class="fa-solid fa-history"></i> Swap History Log</button>
+        </div>
+
+        <div class="main-content">
+            <div id="dash">
+                <h2 class="section-title"><i class="fa-solid fa-chart-simple"></i> Portfolio Dashboard Overview</h2>
