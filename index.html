@@ -191,3 +191,602 @@
         <div class="main-content">
             <div id="dash">
                 <h2 class="section-title"><i class="fa-solid fa-chart-simple"></i> Portfolio Dashboard Overview</h2>
+                <div id="dashGrid" class="dash-grid"></div>
+            </div>
+
+            <div id="hotels" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-hotel"></i> Properties Directory</h2>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                    <div>
+                        <label>Dynamic Search Bar Filter Matrix</label>
+                        <input type="text" id="hotelSearch" oninput="filterHotels()" placeholder="Type to search property name, channels, rep setup...">
+                    </div>
+                    <div>
+                        <label>Target Properties Selector List Dropdown</label>
+                        <select id="hotelSelect" onchange="loadHotel()"></select>
+                    </div>
+                </div>
+                <div id="hotelView"></div>
+            </div>
+
+            <div id="add" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-square-plus"></i> Register New Property Assignment</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div>
+                        <label>Assigned Sales Executive Representative</label>
+                        <select id="sales"></select>
+                    </div>
+                    <div>
+                        <label>Hotel/Corporate Account Name</label>
+                        <input type="text" id="hName" placeholder="e.g. Grand Hilton Resort">
+                    </div>
+                    <div>
+                        <label>Circuit ID</label>
+                        <input type="text" id="cId" placeholder="e.g. CKT-99201">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div>
+                        <label>Active Terminals Count (Total Operational TVs)</label>
+                        <input type="number" id="tv" placeholder="e.g. 150">
+                    </div>
+                    <div>
+                        <label>Agreement Validity Start Initialization Date</label>
+                        <input type="date" id="from">
+                    </div>
+                    <div>
+                        <label>Agreement Expiration Termination Deadline Date</label>
+                        <input type="date" id="to">
+                    </div>
+                </div>
+                <label>Solution Type</label>
+                <select id="type">
+                    <option value="IPTV enterprise">IPTV enterprise</option>
+                    <option value="IPTV BIZZ">IPTV BIZZ</option>
+                    <option value="DMATV">DMATV</option>
+                    <option value="AMATV">AMATV</option>
+                    <option value="Channel only">Channel only</option>
+                    <option value="Hospitality TV">Hospitality TV</option>
+                </select>
+                
+                <label>Select the channel list</label>
+                <div id="addHotelCheckboxMatrix" class="checkbox-matrix-container"></div>
+                
+                <button class="btn" onclick="addHotel()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Save Profile Record Changes
+                </button>
+            </div>
+
+            <div id="deletePage" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-triangle-exclamation"></i> Administration Record Cleansing Console</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hotel/Corporate Account Name</th>
+                                <th>Account Owner Representative Handled</th>
+                                <th style="text-align: right;">System Operations Actions Engine</th>
+                            </tr>
+                        </thead>
+                        <tbody id="delTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="channels" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-chart-pie"></i> Channel Utilization Footprint</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Channel Identifier</th>
+                                <th>Aggregate Deployment Nodes</th>
+                                <th>Active Location Footprint</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="history" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Security Auditing & Channel Swap Logs</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 18%;">Execution Date</th>
+                                <th style="width: 22%;">Hotel Property</th>
+                                <th style="width: 25%;">Previous Allocation Lineup</th>
+                                <th style="width: 25%;">Updated Destination Lineup</th>
+                                <th style="width: 10%;">Authorized User</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="channelSwapModal" class="page-overlay-modal hidden">
+        <div class="modal-subpage-box">
+            <div class="modal-header">
+                <h3 style="color: var(--primary); font-size: 18px; font-weight:700;"><i class="fa-solid fa-arrows-rotate" style="color:var(--accent);"></i> Channel Swap Management Page</h3>
+                <button style="background:transparent; border:none; font-size:18px; cursor:pointer; color:#7f8c8d;" onclick="closeChannelSwapPage()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 13px; color: #7f8c8d; margin-bottom: 20px;">Review the existing channel lineup configuration list. Map any channel item row directly to a replacement master choice dropdown alternative.</p>
+                <div id="swapRowsContainer"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger btn-small" onclick="closeChannelSwapPage()">Cancel</button>
+                <button class="btn btn-small" style="background: var(--success);" onclick="saveChannelSwapModifications()">Save Swap Settings</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxa0Ejf39dmUYV4QzLKDglQXNXKPxcv4BGgVNOvcJqof123i41jLxMy2T9rrpJ-5Cvq/exec";
+
+const users = [
+  {u:"admin",p:"admin123",role:"admin",name:"Admin"},
+  {u:"asanka",p:"1234",role:"sales",name:"Asanka"},
+  {u:"hadi",p:"1234",role:"sales",name:"Hadi"},
+  {u:"roy",p:"1234",role:"sales",name:"Roy"},
+  {u:"sanjaya",p:"1234",role:"sales",name:"Sanjaya"},
+  {u:"lasan",p:"1234",role:"sales",name:"Lasan"}
+];
+
+let current = null;
+let hotels = [];
+let globalMasterChannels = []; 
+let globalSwapLogs = []; 
+let activeEditingRowId = null; 
+
+document.addEventListener("DOMContentLoaded", () => {
+    const catchEnter = (e) => { if (e.key === "Enter") login(); };
+    document.getElementById("u").addEventListener("keydown", catchEnter);
+    document.getElementById("p").addEventListener("keydown", catchEnter);
+});
+
+function extractLeadingNumber(str) {
+    const match = String(str).match(/\d+/);
+    return match ? parseInt(match[0], 10) : Infinity;
+}
+
+function normalizeHotel(h, i) {
+  if (!h) return null;
+  let rawChannelsString = "";
+  if (Array.isArray(h.channels)) rawChannelsString = h.channels.join("|");
+  else if (typeof h.channels === "string") rawChannelsString = h.channels;
+  else if (h.channels) rawChannelsString = String(h.channels);
+  
+  const cleanChannelsArray = rawChannelsString.split(/[|,;\n]/).map(c => c.trim()).filter(Boolean);
+  return { 
+    ...h, 
+    hotelName: h.hotelName || "Unnamed Account", 
+    tvPoints: Number(h.tvPoints || 0), 
+    channels: cleanChannelsArray, 
+    _row: Number(h._row || (i + 2)) 
+  };
+}
+
+async function loadFromSheet() {
+  try {
+    const res = await fetch(API_URL, { cache: "no-store" });
+    const text = await res.text();
+    const parsedPayload = JSON.parse(text || '{"hotels":[],"masterChannels":[],"swapHistory":[]}');
+    
+    let rawChannels = parsedPayload.masterChannels || [];
+    rawChannels.sort((a, b) => {
+        const numA = extractLeadingNumber(a);
+        const numB = extractLeadingNumber(b);
+        if (numA !== numB) return numA - numB;
+        return String(a).localeCompare(String(b));
+    });
+    globalMasterChannels = rawChannels;
+    
+    globalSwapLogs = parsedPayload.swapHistory || [];
+    
+    const data = parsedPayload.hotels || [];
+    hotels = Array.isArray(data) ? data.map(normalizeHotel).filter(h => h !== null && h.hotelName !== "Unnamed Account") : [];
+    
+    renderChannelCheckboxes();
+    renderDash();
+    loadHotels();
+    
+    if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
+    if (!document.getElementById("channels").classList.contains("hidden")) loadSummary();
+    if (!document.getElementById("history").classList.contains("hidden")) renderHistoryLogPage();
+  } catch (e) {
+    console.error("System sync synchronization error: ", e);
+    hotels = [];
+    renderDash();
+    loadHotels();
+  }
+}
+
+function renderChannelCheckboxes() {
+    const boxMatrix = document.getElementById("addHotelCheckboxMatrix");
+    if (!globalMasterChannels || globalMasterChannels.length === 0) {
+        boxMatrix.innerHTML = `<span style="color:#7f8c8d; font-size:13px; padding: 10px; display:block;">No options saved on 'ChannelList' Google Sheet tab.</span>`;
+        return;
+    }
+    boxMatrix.innerHTML = globalMasterChannels.map((chan) => `
+        <label class="checkbox-item">
+            <input type="checkbox" value="${chan}" class="hotel-add-chan-checkbox">
+            <span>${chan}</span>
+        </label>
+    `).join("");
+}
+
+function login() {
+  const usernameInput = document.getElementById("u").value.trim().toLowerCase();
+  const passwordInput = document.getElementById("p").value;
+
+  current = users.find(x => x.u === usernameInput && x.p === passwordInput);
+  if (!current) { alert("Invalid Credentials Entered. Access Denied."); return; }
+
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("app").style.display = "block";
+
+  userNameDisplay.innerText = current.name;
+  avatarLetter.innerText = current.name.charAt(0).toUpperCase();
+  userBadgeSlot.innerHTML = `<span class='role-badge ${current.role === 'admin' ? 'admin' : ''}'>${current.role}</span>`;
+
+  setupRole();
+  loadSales();
+  loadFromSheet();
+}
+
+function setupRole() {
+  const historyBtn = document.getElementById("historyBtn");
+  const channelBtn = document.getElementById("channelBtn");
+  const deleteBtn = document.getElementById("deleteBtn");
+
+  if (current.role === "sales") {
+    if(channelBtn) channelBtn.style.display = "none";
+    if(historyBtn) historyBtn.style.display = "none"; 
+    if(deleteBtn) deleteBtn.style.display = "block";
+  } else {
+    if(channelBtn) channelBtn.style.display = "block";
+    if(historyBtn) historyBtn.style.display = "block"; 
+    if(deleteBtn) deleteBtn.style.display = "block";
+  }
+}
+
+function show(v) {
+  ["dash", "hotels", "channels", "add", "deletePage", "history"].forEach(x => {
+    document.getElementById(x).classList.add("hidden");
+    document.getElementById("tab-" + x)?.classList.remove("active");
+  });
+  document.getElementById(v).classList.remove("hidden");
+  document.getElementById("tab-" + v)?.classList.add("active");
+
+  if (v === "channels") loadSummary();
+  if (v === "deletePage") loadDelete();
+  if (v === "hotels") loadHotels();
+  if (v === "dash") renderDash();
+  if (v === "history") renderHistoryLogPage();
+}
+
+function getVisibleHotels() {
+  return current.role === "admin" ? hotels : hotels.filter(h => (h.salesKey || "") === current.u);
+}
+
+function getFilteredHotels() {
+  const q = (hotelSearch.value || "").trim().toLowerCase();
+  const list = getVisibleHotels();
+  if (!q) return list;
+  return list.filter(h => {
+    const hay = [h.hotelName, h.circuitId, h.salesPerson, h.type, ...(Array.isArray(h.channels) ? h.channels : [])].join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+function generateBreakdownHtml(list) {
+  const types = ["IPTV enterprise", "IPTV BIZZ", "DMATV", "AMATV", "Channel only", "Hospitality TV"];
+  return types.map(t => {
+    const count = list.filter(h => (h.type || "").trim().toLowerCase() === t.toLowerCase()).length;
+    return `<div style="display: flex; justify-content: space-between;"><span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> ${t}:</span><strong>${count}</strong></div>`;
+  }).join("");
+}
+
+function renderDash() {
+  const dashGrid = document.getElementById("dashGrid");
+  if (!dashGrid || !current) return;
+  dashGrid.innerHTML = "";
+
+  if (current.role === "admin") {
+    const totalHotels = hotels.length;
+    const totalTV = hotels.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
+    dashGrid.innerHTML += `
+      <div class="box" style="background: linear-gradient(135deg, #1e3799 0%, #4a69bd 100%);">
+        <h3>System Global Footprint</h3>
+        <div class="stat">${totalHotels} Managed Accounts</div>
+        <p><i class="fa-solid fa-tv"></i> Across ${totalTV} Operational Displays</p>
+      </div>
+    `;
+    users.filter(u => u.role === "sales").forEach((u, idx) => {
+      const list = hotels.filter(h => (h.salesKey || "") === u.u);
+      const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
+      const gradients = ["linear-gradient(135deg, #079992 0%, #38ada9 100%)", "linear-gradient(135deg, #60a3bc 0%, #3c6382 100%)", "linear-gradient(135deg, #e67e22 0%, #d35400 100%)", "linear-gradient(135deg, #78e08f 0%, #38ea92 100%)"];
+      dashGrid.innerHTML += `
+        <div class="box" style="background: ${gradients[idx % gradients.length]}">
+          <h3>${u.name} Portfolio Balance</h3>
+          <div class="stat">${list.length} Accounts</div>
+          <p style="margin-bottom: 8px;"><i class="fa-solid fa-display"></i> Servicing ${tv} Terminal Points</p>
+          <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">${generateBreakdownHtml(list)}</div>
+        </div>
+      `;
+    });
+  } else {
+    const list = hotels.filter(h => (h.salesKey || "") === current.u);
+    const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
+    dashGrid.innerHTML = `
+      <div class="box" style="background: linear-gradient(135deg, #079992 0%, #38ada9 100%)">
+        <h3>Representative Managed Portfolio</h3>
+        <div class="stat">${list.length} Monitored Client Sites</div>
+        <p style="margin-bottom: 8px;"><i class="fa-solid fa-tv"></i> Tracking ${tv} Node Endpoints</p>
+        <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">${generateBreakdownHtml(list)}</div>
+      </div>
+    `;
+  }
+}
+
+function loadSales() {
+  const salesSelect = document.getElementById("sales");
+  if (!salesSelect) return;
+  if (current.role === "sales") {
+    salesSelect.innerHTML = `<option value="${current.u}">${current.name}</option>`;
+    salesSelect.value = current.u;
+    return;
+  }
+  salesSelect.innerHTML = users.filter(u => u.role === "sales").map(u => `<option value="${u.u}">${u.name}</option>`).join("");
+}
+
+async function addHotel() {
+  const salesSelect = document.getElementById("sales");
+  const user = users.find(x => x.u === salesSelect.value);
+  if (!user) { alert("Please assign a valid active manager."); return; }
+  const checkedInputElements = document.querySelectorAll(".hotel-add-chan-checkbox:checked");
+  const cleanChannelsArray = Array.from(checkedInputElements).map(el => el.value);
+
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      hotelName: document.getElementById("hName").value, 
+      circuitId: document.getElementById("cId").value, 
+      tvPoints: document.getElementById("tv").value,
+      from: document.getElementById("from").value, 
+      to: document.getElementById("to").value, 
+      salesKey: user.u, 
+      salesPerson: user.name,
+      type: document.getElementById("type").value, 
+      channels: cleanChannelsArray 
+    })
+  });
+
+  alert("Registry Dataset Synchronized Successfully!");
+  document.getElementById("hName").value = ""; 
+  document.getElementById("cId").value = ""; 
+  document.getElementById("tv").value = ""; 
+  document.getElementById("from").value = ""; 
+  document.getElementById("to").value = ""; 
+  document.getElementById("type").value = "IPTV enterprise";
+  document.querySelectorAll(".hotel-add-chan-checkbox:checked").forEach(el => el.checked = false);
+  await loadFromSheet();
+}
+
+function loadHotels() {
+  const list = getFilteredHotels();
+  window.hotelList = list;
+  const hotelSelect = document.getElementById("hotelSelect");
+  const hotelView = document.getElementById("hotelView");
+  
+  if(!hotelSelect || !hotelView) return;
+
+  hotelSelect.innerHTML = list.map((h, i) => `<option value="${i}">${h.hotelName}</option>`).join("");
+  if (list.length === 0) {
+    hotelView.innerHTML = `<div style='text-align:center; padding: 40px; color:#7f8c8d;'><p>No matching registries found.</p></div>`;
+    return;
+  }
+  hotelSelect.value = "0";
+  loadHotel();
+}
+
+function filterHotels() { loadHotels(); }
+
+function loadHotel() {
+  const list = window.hotelList || [];
+  const hotelSelect = document.getElementById("hotelSelect");
+  const hotelView = document.getElementById("hotelView");
+  if(!hotelSelect || !hotelView) return;
+
+  const h = list[Number(hotelSelect.value)];
+  if (!h) { hotelView.innerHTML = ""; return; }
+
+  const sortedChannelsView = [...(h.channels || [])].sort((a,b) => extractLeadingNumber(a) - extractLeadingNumber(b));
+  const channelTagsHtml = sortedChannelsView.map(c => `<div class="channel-tag">${c}</div>`).join("");
+
+  hotelView.innerHTML = `
+    <div class="display-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
+         <h3 style="margin-bottom:0;">${h.hotelName || ""}</h3>
+         <button class="btn btn-small" style="background-color: var(--primary-light);" onclick="openChannelSwapPage(${h._row})">
+             <i class="fa-solid fa-arrows-rotate"></i> Channel Swap Engine
+         </button>
+      </div>
+      <div class="info-grid">
+        <div class="info-cell"><small>Account Strategist Rep</small><span>${h.salesPerson || ""}</span></div>
+        <div class="info-cell"><small>Circuit ID</small><span>${h.circuitId || "N/A"}</span></div>
+        <div class="info-cell"><small>Active Displays Count</small><span>${h.tvPoints || 0} Units Assigned</span></div>
+        <div class="info-cell"><small>Solution Type</small><span>${h.type || "IPTV enterprise"}</span></div>
+      </div>
+      <div>
+        <label style="margin-bottom:12px; display:block;">Operational Allocation Channels Matrix</label>
+        <div class="tag-container">${channelTagsHtml || '<span style="color:#7f8c8d; font-size:13px;">No channels allocated to this profile yet.</span>'}</div>
+      </div>
+    </div>
+  `;
+}
+
+function openChannelSwapPage(rowId) {
+    activeEditingRowId = rowId;
+    const hotelObj = hotels.find(h => h._row === rowId);
+    if (!hotelObj) return;
+
+    const container = document.getElementById("swapRowsContainer");
+    container.innerHTML = "";
+
+    if (!hotelObj.channels || hotelObj.channels.length === 0) {
+        container.innerHTML = `<p style="color:#7f8c8d; font-size:14px; text-align:center;">This hotel has no current channel listings to swap.</p>`;
+        document.getElementById("channelSwapModal").classList.remove("hidden");
+        return;
+    }
+
+    const sortedCurrentLineup = [...hotelObj.channels].sort((a,b) => extractLeadingNumber(a) - extractLeadingNumber(b));
+    sortedCurrentLineup.forEach((currentChan, index) => {
+        let dropdownHtml = globalMasterChannels.map(mChan => `<option value="${mChan}" ${mChan === currentChan ? 'selected' : ''}>${mChan}</option>`).join('');
+        const rowElement = document.createElement("div");
+        rowElement.className = "swap-row-item";
+        rowElement.innerHTML = `
+            <span style="font-weight:600; font-size:14px; color:var(--text-dark);">${currentChan}</span>
+            <i class="fa-solid fa-arrow-right-long" style="color:#a4b0be;"></i>
+            <select class="swap-dropdown-select-element" data-index="${index}">
+                ${dropdownHtml}
+            </select>
+        `;
+        container.appendChild(rowElement);
+    });
+    document.getElementById("channelSwapModal").classList.remove("hidden");
+}
+
+function closeChannelSwapPage() {
+    document.getElementById("channelSwapModal").classList.add("hidden");
+    activeEditingRowId = null;
+}
+
+async function saveChannelSwapModifications() {
+    if (!activeEditingRowId) return;
+    const hotelObj = hotels.find(h => h._row === activeEditingRowId);
+    if (!hotelObj) return;
+    
+    const selectFields = document.querySelectorAll(".swap-dropdown-select-element");
+    const mutatedChannelsArray = [];
+    selectFields.forEach(select => { if(select.value) mutatedChannelsArray.push(select.value); });
+
+    try {
+        await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "updateChannels",
+                row: Number(activeEditingRowId),
+                hotelName: hotelObj.hotelName, 
+                swappedBy: current.name,      
+                channels: mutatedChannelsArray
+            })
+        });
+        alert("Channel lineup settings saved and logged successfully!");
+        closeChannelSwapPage();
+        await loadFromSheet();
+    } catch(err) {
+        alert("Synchronization framework error saving selection details.");
+        console.error(err);
+    }
+}
+
+function renderHistoryLogPage() {
+    const targetTable = document.getElementById("historyTable");
+    if (!targetTable) return;
+
+    if (current.role !== "admin") {
+        targetTable.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">Access Denied. Admin Permissions required.</td></tr>`;
+        return;
+    }
+    if (!globalSwapLogs || globalSwapLogs.length === 0) {
+        targetTable.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#7f8c8d;">No historical swaps registered in dataset archive yet.</td></tr>`;
+        return;
+    }
+    
+    const historicalFeed = [...globalSwapLogs].reverse();
+    
+    targetTable.innerHTML = historicalFeed.map(log => {
+        const parsedOld = String(log.oldLineup || "").split("|").map(x => `<span class="history-tag">${x}</span>`).join("");
+        const parsedNew = String(log.newLineup || "").split("|").map(x => `<span class="history-tag new">${x}</span>`).join("");
+        
+        let displayDate = "N/A";
+        if (log.timestamp) {
+            try {
+                displayDate = new Date(log.timestamp).toLocaleString();
+            } catch(ex) {
+                displayDate = String(log.timestamp);
+            }
+        }
+
+        return `
+          <tr>
+            <td><small style="color:#7f8c8d; font-weight:600;">${displayDate}</small></td>
+            <td><strong style="color:var(--primary);">${log.hotelName || "Unknown Property"}</strong></td>
+            <td><div style="max-height:80px; overflow-y:auto; display:flex; flex-wrap:wrap; gap:4px;">${parsedOld || "None"}</div></td>
+            <td><div style="max-height:80px; overflow-y:auto; display:flex; flex-wrap:wrap; gap:4px;">${parsedNew || "None"}</div></td>
+            <td><span class="role-badge" style="background:#dcdde1; color:var(--text-dark);">${log.swappedBy || "System"}</span></td>
+          </tr>
+        `;
+    }).join("");
+}
+
+async function del(rowNum, hotelName, salesKey) {
+  if (current.role === "sales" && salesKey !== current.u) { alert("Unauthorized operational permissions violation."); return; }
+  if (!confirm(`Warning: Are you completely certain you intend to purge records matching ${hotelName}? This action is irreversible.`)) return;
+
+  try {
+    await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "delete", row: Number(rowNum) }) });
+  } catch (error) { console.error("Purge operations trace error: ", error); }
+  await loadFromSheet();
+}
+
+function loadSummary() {
+  const visible = getVisibleHotels();
+  const map = {}; const countMap = {};
+  visible.forEach(h => {
+    if(h && Array.isArray(h.channels)) {
+      h.channels.forEach(c => {
+        const cleanC = c.trim();
+        if (cleanC) {
+          map[cleanC] = (map[cleanC] || 0) + Number(h.tvPoints || 0);
+          countMap[cleanC] = (countMap[cleanC] || 0) + 1;
+        }
+      });
+    }
+  });
+  const summaryTable = document.getElementById("summaryTable");
+  if(!summaryTable) return;
+  
+  summaryTable.innerHTML = Object.keys(map).sort((a,b) => extractLeadingNumber(a) - extractLeadingNumber(b)).map(c => {
+    const hotelCount = countMap[c] || 0;
+    return `<tr><td><strong style="color: var(--text-dark); font-size: 16px;">${c}</strong></td><td><strong style="color: var(--primary); font-size: 16px;">${map[c]}</strong> TV points</td><td><span class="role-badge" style="background: var(--accent); color: var(--primary); font-weight: 700; padding: 6px 14px;">${hotelCount} ${hotelCount === 1 ? 'hotel' : 'hotels'}</span></td></tr>`;
+  }).join("");
+}
+
+function loadDelete() {
+  const list = getVisibleHotels();
+  const delTable = document.getElementById("delTable");
+  if(!delTable) return;
+
+  if (list.length === 0) {
+    delTable.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:30px; color:#7f8c8d;">No active registries found matching profile layout boundaries.</td></tr>`;
+    return;
+  }
+  delTable.innerHTML = list.map((h) => {
+    if (!h || !h.hotelName) return "";
+    const escapedName = (h.hotelName || "").replace(/'/g, "\\'");
+    return `<tr><td><strong>${h.hotelName || ""}</strong></td><td>${h.salesPerson || ""}</td><td style="text-align: right;"><button class="btn btn-danger btn-small" onclick="del(${h._row}, '${escapedName}', '${h.salesKey || ""}')"><i class="fa-solid fa-trash"></i> Drop Profile</button></td></tr>`;
+  }).join("");
+}
+
+function logout() { location.reload(); }
+</script>
+</body>
+</html>
