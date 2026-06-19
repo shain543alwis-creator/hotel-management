@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Channel Management System</title>
+    <title>Hotel Channel & STB Management System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -57,7 +57,7 @@
         }
         input:focus, select:focus, textarea:focus { border: 2px solid var(--primary-light); background: #fff; }
         
-        .app-container { max-width: 1100px; margin: 30px auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
+        .app-container { max-width: 1200px; margin: 30px auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
         .app-banner { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); padding: 30px; color: white; display: flex; justify-content: space-between; align-items: center; }
         .app-banner h1 { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
         
@@ -90,11 +90,7 @@
 
         .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
         .channel-tag { background: #e8f0fe; color: var(--primary); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid #c7d9f9; }
-        .channel-tag.new { background: #d4edda; color: #155724; border-color: #c3e6cb; }
         
-        .history-tag { display: inline-block; background: #f1f2f6; color: #5d6d7e; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin: 2px; border: 1px solid #dcdde1; }
-        .history-tag.new { background: #d4edda; color: #155724; border-color: #c3e6cb; }
-
         .checkbox-matrix-container { 
             max-height: 320px; 
             overflow-y: auto; 
@@ -115,21 +111,8 @@
             padding: 10px 12px; 
             border-bottom: 1px solid #e8ecef; 
             width: 100%; 
-            box-sizing: border-box;
         }
-        .checkbox-item:last-child { border-bottom: none; }
         .checkbox-item:hover { background-color: rgba(30, 55, 153, 0.05); }
-        .checkbox-item input { width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
-
-        .page-overlay-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 999; }
-        .modal-subpage-box { background: white; width: 100%; max-width: 650px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); overflow: hidden; border-top: 6px solid var(--primary); }
-        .modal-header { background: var(--bg-light); padding: 20px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 30px; max-height: 400px; overflow-y: auto; }
-        .modal-footer { background: var(--bg-light); padding: 15px 30px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
-        
-        .swap-row-item { display: grid; grid-template-columns: 1fr auto 1.2fr; align-items: center; gap: 15px; padding: 10px 0; border-bottom: 1px dashed var(--border-color); }
-        .swap-row-item:last-child { border-bottom: none; }
-        .swap-row-item select { margin-bottom: 0; padding: 8px; font-size: 14px; }
 
         .table-container { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
         table { width: 100%; border-collapse: collapse; text-align: left; background: white; }
@@ -141,7 +124,12 @@
         .btn:hover { background: var(--primary-light); }
         .btn-danger { background: var(--danger); }
         .btn-danger:hover { background: #ff4d4d; }
+        .btn-success { background: var(--success); color: #155724; }
         .btn-small { padding: 6px 12px; font-size: 13px; border-radius: 4px; }
+        
+        .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .status-pending { background: #ffeaa7; color: #d35400; }
+        .status-issued { background: #d4edda; color: #155724; }
     </style>
 </head>
 <body>
@@ -166,7 +154,7 @@
 
     <div id="app" class="app-container" style="display: none;">
         <div class="app-banner">
-            <h1><i class="fa-solid fa-hotel" style="color: var(--accent);"></i> Channel Distribution Portal</h1>
+            <h1><i class="fa-solid fa-hotel" style="color: var(--accent);"></i> Channel & STB Portal</h1>
             <div class="user-panel">
                 <div class="avatar" id="avatarLetter">A</div>
                 <div>
@@ -183,9 +171,10 @@
             <button id="tab-dash" onclick="show('dash')" class="active"><i class="fa-solid fa-gauge"></i> Dashboard</button>
             <button id="tab-hotels" onclick="show('hotels')"><i class="fa-solid fa-folder-open"></i> Hotel details</button>
             <button id="tab-add" onclick="show('add')"><i class="fa-solid fa-plus-circle"></i> Add New Hotel</button>
+            <button id="tab-stbRequest" onclick="show('stbRequest')"><i class="fa-solid fa-file-invoice"></i> Request STBs</button>
+            <button id="stbAdminBtn" onclick="show('stbAdmin')"><i class="fa-solid fa-boxes-stacked"></i> STB Stock & Allocation</button>
             <button id="deleteBtn" onclick="show('deletePage')"><i class="fa-solid fa-sliders"></i> Manage Hotels</button>
             <button id="channelBtn" onclick="show('channels')"><i class="fa-solid fa-tv"></i> Channel Utilization</button>
-            <button id="historyBtn" onclick="show('history')"><i class="fa-solid fa-history"></i> Swap History Log</button>
         </div>
 
         <div class="main-content">
@@ -257,6 +246,107 @@
                 </button>
             </div>
 
+            <div id="stbRequest" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-paper-plane"></i> Submit PEOTV STB Allocation Request</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div>
+                        <label>Hotel Name</label>
+                        <input type="text" id="stbHotelName" placeholder="e.g. Grand Hilton Resort">
+                    </div>
+                    <div>
+                        <label>Area / Location</label>
+                        <input type="text" id="stbArea" placeholder="e.g. Colombo 03">
+                    </div>
+                    <div>
+                        <label>Full Address</label>
+                        <input type="text" id="stbAddress" placeholder="e.g. 123, Galle Road, Colombo">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div>
+                        <label>Circuit ID / PBIZ Number</label>
+                        <input type="text" id="stbCircuit" placeholder="e.g. PBIZ-88921">
+                    </div>
+                    <div>
+                        <label>Number of STBs Required</label>
+                        <input type="number" id="stbQty" placeholder="e.g. 25">
+                    </div>
+                    <div>
+                        <label>Preferred Hardware Device Platform</label>
+                        <select id="stbPlatform">
+                            <option value="Hwacom">Hwacom</option>
+                            <option value="Netgem">Netgem</option>
+                            <option value="MIT">MIT</option>
+                            <option value="Suntech">Suntech</option>
+                            <option value="SDMC">SDMC</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn" onclick="submitStbRequest()">
+                    <i class="fa-solid fa-paper-plane"></i> Dispatch STB Request
+                </button>
+            </div>
+
+            <div id="stbAdmin" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-warehouse"></i> Inventory Stock Breakdown Hub</h2>
+                
+                <div class="table-container" style="margin-bottom: 40px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hardware Variant Model</th>
+                                <th>Total Inventory Stock Issued</th>
+                                <th>Current Stock Balance On-Hand</th>
+                                <th>Net Pipeline Demand</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stbStockTableBody">
+                            </tbody>
+                    </table>
+                </div>
+
+                <h2 class="section-title"><i class="fa-solid fa-plus"></i> Ingest New Inbound Inventory Shipments</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; align-items: flex-end; margin-bottom: 40px;">
+                    <div>
+                        <label>Hardware Platform Select</label>
+                        <select id="incomingPlatform">
+                            <option value="Hwacom">Hwacom</option>
+                            <option value="Netgem">Netgem</option>
+                            <option value="MIT">MIT</option>
+                            <option value="Suntech">Suntech</option>
+                            <option value="SDMC">SDMC</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Incoming Received Quantity</label>
+                        <input type="number" id="incomingQty" placeholder="e.g. 100">
+                    </div>
+                    <div>
+                        <button class="btn" onclick="addIncomingStock()" style="width: 100%; margin-bottom: 20px;">
+                            <i class="fa-solid fa-dolly"></i> Post Stock Ingest
+                        </button>
+                    </div>
+                </div>
+
+                <h2 class="section-title"><i class="fa-solid fa-list-check"></i> Pending Allocation Requests Queue</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hotel Identity Info</th>
+                                <th>Circuit/PBIZ</th>
+                                <th>Platform</th>
+                                <th>Qty Requested</th>
+                                <th>Current Flow Status</th>
+                                <th style="text-align: right;">System Fulfillment Processing</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stbRequestsQueueBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div id="deletePage" class="hidden">
                 <h2 class="section-title"><i class="fa-solid fa-triangle-exclamation"></i> Administration Record Cleansing Console</h2>
                 <div class="table-container">
@@ -289,40 +379,6 @@
                 </div>
             </div>
 
-            <div id="history" class="hidden">
-                <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Security Auditing & Channel Swap Logs</h2>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 18%;">Execution Date</th>
-                                <th style="width: 22%;">Hotel Property</th>
-                                <th style="width: 25%;">Previous Allocation Lineup</th>
-                                <th style="width: 25%;">Updated Destination Lineup</th>
-                                <th style="width: 10%;">Authorized User</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTable"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="channelSwapModal" class="page-overlay-modal hidden">
-        <div class="modal-subpage-box">
-            <div class="modal-header">
-                <h3 style="color: var(--primary); font-size: 18px; font-weight:700;"><i class="fa-solid fa-arrows-rotate" style="color:var(--accent);"></i> Channel Swap Management Page</h3>
-                <button style="background:transparent; border:none; font-size:18px; cursor:pointer; color:#7f8c8d;" onclick="closeChannelSwapPage()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="modal-body">
-                <p style="font-size: 13px; color: #7f8c8d; margin-bottom: 20px;">Review the existing channel lineup configuration list. Map any channel item row directly to a replacement master choice dropdown alternative.</p>
-                <div id="swapRowsContainer"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-danger btn-small" onclick="closeChannelSwapPage()">Cancel</button>
-                <button class="btn btn-small" style="background: var(--success);" onclick="saveChannelSwapModifications()">Save Swap Settings</button>
-            </div>
         </div>
     </div>
 
@@ -341,26 +397,14 @@ const users = [
 let current = null;
 let hotels = [];
 let globalMasterChannels = []; 
-let globalSwapLogs = []; 
-let activeEditingRowId = null; 
-
-document.addEventListener("DOMContentLoaded", () => {
-    const catchEnter = (e) => { if (e.key === "Enter") login(); };
-    document.getElementById("u").addEventListener("keydown", catchEnter);
-    document.getElementById("p").addEventListener("keydown", catchEnter);
-});
-
-function extractLeadingNumber(str) {
-    const match = String(str).match(/\d+/);
-    return match ? parseInt(match[0], 10) : Infinity;
-}
+let globalStbStock = {};
+let globalStbRequests = [];
 
 function normalizeHotel(h, i) {
   if (!h) return null;
   let rawChannelsString = "";
   if (Array.isArray(h.channels)) rawChannelsString = h.channels.join("|");
   else if (typeof h.channels === "string") rawChannelsString = h.channels;
-  else if (h.channels) rawChannelsString = String(h.channels);
   
   const cleanChannelsArray = rawChannelsString.split(/[|,;\n]/).map(c => c.trim()).filter(Boolean);
   return { 
@@ -375,19 +419,11 @@ function normalizeHotel(h, i) {
 async function loadFromSheet() {
   try {
     const res = await fetch(API_URL, { cache: "no-store" });
-    const text = await res.text();
-    const parsedPayload = JSON.parse(text || '{"hotels":[],"masterChannels":[],"swapHistory":[]}');
+    const parsedPayload = await res.json();
     
-    let rawChannels = parsedPayload.masterChannels || [];
-    rawChannels.sort((a, b) => {
-        const numA = extractLeadingNumber(a);
-        const numB = extractLeadingNumber(b);
-        if (numA !== numB) return numA - numB;
-        return String(a).localeCompare(String(b));
-    });
-    globalMasterChannels = rawChannels;
-    
-    globalSwapLogs = parsedPayload.swapHistory || [];
+    globalMasterChannels = parsedPayload.masterChannels || [];
+    globalStbStock = parsedPayload.stbStock || { "Hwacom": {onHand:0, issued:0}, "Netgem": {onHand:0, issued:0}, "MIT": {onHand:0, issued:0}, "Suntech": {onHand:0, issued:0}, "SDMC": {onHand:0, issued:0} };
+    globalStbRequests = parsedPayload.stbRequests || [];
     
     const data = parsedPayload.hotels || [];
     hotels = Array.isArray(data) ? data.map(normalizeHotel).filter(h => h !== null && h.hotelName !== "Unnamed Account") : [];
@@ -395,24 +431,17 @@ async function loadFromSheet() {
     renderChannelCheckboxes();
     renderDash();
     loadHotels();
+    renderStbDashboard();
     
     if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
     if (!document.getElementById("channels").classList.contains("hidden")) loadSummary();
-    if (!document.getElementById("history").classList.contains("hidden")) renderHistoryLogPage();
   } catch (e) {
     console.error("System sync synchronization error: ", e);
-    hotels = [];
-    renderDash();
-    loadHotels();
   }
 }
 
 function renderChannelCheckboxes() {
     const boxMatrix = document.getElementById("addHotelCheckboxMatrix");
-    if (!globalMasterChannels || globalMasterChannels.length === 0) {
-        boxMatrix.innerHTML = `<span style="color:#7f8c8d; font-size:13px; padding: 10px; display:block;">No options saved on 'ChannelList' Google Sheet tab.</span>`;
-        return;
-    }
     boxMatrix.innerHTML = globalMasterChannels.map((chan) => `
         <label class="checkbox-item">
             <input type="checkbox" value="${chan}" class="hotel-add-chan-checkbox">
@@ -441,24 +470,24 @@ function login() {
 }
 
 function setupRole() {
-  const historyBtn = document.getElementById("historyBtn");
+  const stbAdminBtn = document.getElementById("stbAdminBtn");
   const channelBtn = document.getElementById("channelBtn");
   const deleteBtn = document.getElementById("deleteBtn");
 
   if (current.role === "sales") {
     if(channelBtn) channelBtn.style.display = "none";
-    if(historyBtn) historyBtn.style.display = "none"; 
-    if(deleteBtn) deleteBtn.style.display = "block";
+    if(stbAdminBtn) stbAdminBtn.style.display = "none";
+    if(deleteBtn) deleteBtn.style.display = "none";
   } else {
     if(channelBtn) channelBtn.style.display = "block";
-    if(historyBtn) historyBtn.style.display = "block"; 
+    if(stbAdminBtn) stbAdminBtn.style.display = "block";
     if(deleteBtn) deleteBtn.style.display = "block";
   }
 }
 
 function show(v) {
-  ["dash", "hotels", "channels", "add", "deletePage", "history"].forEach(x => {
-    document.getElementById(x).classList.add("hidden");
+  ["dash", "hotels", "channels", "add", "deletePage", "stbRequest", "stbAdmin"].forEach(x => {
+    document.getElementById(x)?.classList.add("hidden");
     document.getElementById("tab-" + x)?.classList.remove("active");
   });
   document.getElementById(v).classList.remove("hidden");
@@ -468,29 +497,145 @@ function show(v) {
   if (v === "deletePage") loadDelete();
   if (v === "hotels") loadHotels();
   if (v === "dash") renderDash();
-  if (v === "history") renderHistoryLogPage();
+  if (v === "stbAdmin") renderStbDashboard();
 }
 
 function getVisibleHotels() {
   return current.role === "admin" ? hotels : hotels.filter(h => (h.salesKey || "") === current.u);
 }
 
-function getFilteredHotels() {
-  const q = (hotelSearch.value || "").trim().toLowerCase();
-  const list = getVisibleHotels();
-  if (!q) return list;
-  return list.filter(h => {
-    const hay = [h.hotelName, h.circuitId, h.salesPerson, h.type, ...(Array.isArray(h.channels) ? h.channels : [])].join(" ").toLowerCase();
-    return hay.includes(q);
-  });
+function filterHotels() { loadHotels(); }
+
+function loadHotels() {
+  const list = current.role === "admin" ? hotels : hotels.filter(h => (h.salesKey || "") === current.u);
+  window.hotelList = list;
+  const hotelSelect = document.getElementById("hotelSelect");
+  if(!hotelSelect) return;
+  hotelSelect.innerHTML = list.map((h, i) => `<option value="${i}">${h.hotelName}</option>`).join("");
+  loadHotel();
 }
 
-function generateBreakdownHtml(list) {
-  const types = ["IPTV enterprise", "IPTV BIZZ", "DMATV", "AMATV", "Channel only", "Hospitality TV"];
-  return types.map(t => {
-    const count = list.filter(h => (h.type || "").trim().toLowerCase() === t.toLowerCase()).length;
-    return `<div style="display: flex; justify-content: space-between;"><span><i class="fa-solid fa-circle-dot" style="font-size: 9px; color: var(--accent); margin-right: 4px;"></i> ${t}:</span><strong>${count}</strong></div>`;
-  }).join("");
+function loadHotel() {
+  const list = window.hotelList || [];
+  const hotelSelect = document.getElementById("hotelSelect");
+  const hotelView = document.getElementById("hotelView");
+  if(!hotelSelect || !hotelView || list.length === 0) return;
+
+  const h = list[Number(hotelSelect.value)];
+  if (!h) return;
+
+  hotelView.innerHTML = `
+    <div class="display-card">
+      <h3>${h.hotelName || ""}</h3>
+      <div class="info-grid">
+        <div class="info-cell"><small>Account Strategist Rep</small><span>${h.salesPerson || ""}</span></div>
+        <div class="info-cell"><small>Circuit ID</small><span>${h.circuitId || "N/A"}</span></div>
+        <div class="info-cell"><small>Active Displays Count</small><span>${h.tvPoints || 0} Units Assigned</span></div>
+        <div class="info-cell"><small>Solution Type</small><span>${h.type || "IPTV enterprise"}</span></div>
+      </div>
+      <div>
+        <label>Operational Allocation Channels Matrix</label>
+        <div class="tag-container">${(h.channels || []).map(c => `<div class="channel-tag">${c}</div>`).join("")}</div>
+      </div>
+    </div>
+  `;
+}
+
+// SUBMIT NEW STB REQUEST (SALES ACTION)
+async function submitStbRequest() {
+    const payload = {
+        action: "submitStbRequest",
+        hotelName: document.getElementById("stbHotelName").value,
+        area: document.getElementById("stbArea").value,
+        address: document.getElementById("stbAddress").value,
+        circuitId: document.getElementById("stbCircuit").value,
+        qty: Number(document.getElementById("stbQty").value),
+        platform: document.getElementById("stbPlatform").value,
+        salesRep: current.name
+    };
+
+    if(!payload.hotelName || !payload.qty) { alert("Please compile all standard required fields."); return; }
+
+    await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+    alert("STB Request Dispatched and Logged inside Master Ledger!");
+    document.getElementById("stbHotelName").value = "";
+    document.getElementById("stbArea").value = "";
+    document.getElementById("stbAddress").value = "";
+    document.getElementById("stbCircuit").value = "";
+    document.getElementById("stbQty").value = "";
+    loadFromSheet();
+}
+
+// RENDER STB MANAGEMENT BALANCES & TABLES (ADMIN PANEL)
+function renderStbDashboard() {
+    const tableBody = document.getElementById("stbStockTableBody");
+    const queueBody = document.getElementById("stbRequestsQueueBody");
+    if(!tableBody || !queueBody) return;
+
+    // Render stock balance parameters
+    tableBody.innerHTML = Object.keys(globalStbStock).map(platform => {
+        const item = globalStbStock[platform];
+        const netRequirement = item.required || 0;
+        return `
+            <tr>
+                <td><strong>${platform}</strong></td>
+                <td><span style="color:var(--primary); font-weight:700;">${item.issued} Units</span></td>
+                <td><span style="color:#27ae60; font-weight:700;">${item.onHand} Units Available</span></td>
+                <td><span style="color:${netRequirement > 0 ? 'var(--danger)' : 'var(--text-dark)'}; font-weight:700;">${netRequirement} Pending Units</span></td>
+            </tr>
+        `;
+    }).join("");
+
+    // Render Request Approvals Pipelines Queue
+    queueBody.innerHTML = globalStbRequests.map(req => {
+        const actionButton = req.status.toLowerCase() === 'pending' ? 
+            `<button class="btn btn-success btn-small" onclick="issueStbRequest(${req._row}, '${req.platform}', ${req.qty})"><i class="fa-solid fa-check"></i> Process & Issue</button>` : 
+            `<span style="color:#27ae60; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Fulfilled</span>`;
+
+        return `
+            <tr>
+                <td><strong>${req.hotelName}</strong><br><small style="color:#7f8c8d;">${req.area} | Rep: ${req.salesRep}</small></td>
+                <td><code>${req.circuitId}</code></td>
+                <td><span class="channel-tag">${req.platform}</span></td>
+                <td><strong>${req.qty} Devices</strong></td>
+                <td><span class="status-badge status-${req.status.toLowerCase()}">${req.status}</span></td>
+                <td style="text-align: right;">${actionButton}</td>
+            </tr>
+        `;
+    }).join("");
+}
+
+// INGEST NEW INCOMING INBOUND SHIPMENTS STOCK
+async function addIncomingStock() {
+    const platform = document.getElementById("incomingPlatform").value;
+    const qty = Number(document.getElementById("incomingQty").value);
+
+    if(!qty || qty <= 0) { alert("Please enter a valid incoming device amount."); return; }
+
+    await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "addIncomingStock", platform, qty })
+    });
+
+    alert(`Ingested ${qty} units into ${platform} stock allocation layers.`);
+    document.getElementById("incomingQty").value = "";
+    loadFromSheet();
+}
+
+// FULFILL REQUEST ENGINE OPERATIONS
+async function issueStbRequest(rowId, platform, qty) {
+    const available = globalStbStock[platform]?.onHand || 0;
+    if(available < qty) {
+        if(!confirm("Warning: Requested allocation amount exceeds current physical On-Hand stock parameters. Force adjustment processing anyway?")) return;
+    }
+
+    await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "fulfillStbRequest", row: rowId, platform, qty })
+    });
+
+    alert("STB Devices structural balance inventory values updated and recorded successfully!");
+    loadFromSheet();
 }
 
 function renderDash() {
@@ -498,60 +643,28 @@ function renderDash() {
   if (!dashGrid || !current) return;
   dashGrid.innerHTML = "";
 
-  if (current.role === "admin") {
-    const totalHotels = hotels.length;
-    const totalTV = hotels.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
-    dashGrid.innerHTML += `
-      <div class="box" style="background: linear-gradient(135deg, #1e3799 0%, #4a69bd 100%);">
-        <h3>System Global Footprint</h3>
-        <div class="stat">${totalHotels} Managed Accounts</div>
-        <p><i class="fa-solid fa-tv"></i> Across ${totalTV} Operational Displays</p>
-      </div>
-    `;
-    users.filter(u => u.role === "sales").forEach((u, idx) => {
-      const list = hotels.filter(h => (h.salesKey || "") === u.u);
-      const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
-      const gradients = ["linear-gradient(135deg, #079992 0%, #38ada9 100%)", "linear-gradient(135deg, #60a3bc 0%, #3c6382 100%)", "linear-gradient(135deg, #e67e22 0%, #d35400 100%)", "linear-gradient(135deg, #78e08f 0%, #38ea92 100%)"];
-      dashGrid.innerHTML += `
-        <div class="box" style="background: ${gradients[idx % gradients.length]}">
-          <h3>${u.name} Portfolio Balance</h3>
-          <div class="stat">${list.length} Accounts</div>
-          <p style="margin-bottom: 8px;"><i class="fa-solid fa-display"></i> Servicing ${tv} Terminal Points</p>
-          <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">${generateBreakdownHtml(list)}</div>
-        </div>
-      `;
-    });
-  } else {
-    const list = hotels.filter(h => (h.salesKey || "") === current.u);
-    const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
-    dashGrid.innerHTML = `
-      <div class="box" style="background: linear-gradient(135deg, #079992 0%, #38ada9 100%)">
-        <h3>Representative Managed Portfolio</h3>
-        <div class="stat">${list.length} Monitored Client Sites</div>
-        <p style="margin-bottom: 8px;"><i class="fa-solid fa-tv"></i> Tracking ${tv} Node Endpoints</p>
-        <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">${generateBreakdownHtml(list)}</div>
-      </div>
-    `;
-  }
+  const totalHotels = hotels.length;
+  const totalTV = hotels.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
+  
+  dashGrid.innerHTML += `
+    <div class="box" style="background: linear-gradient(135deg, #1e3799 0%, #4a69bd 100%);">
+      <h3>Global Operations Tracking Matrix</h3>
+      <div class="stat">${totalHotels} Managed Accounts</div>
+      <p><i class="fa-solid fa-tv"></i> Servicing Across ${totalTV} Operational TVs</p>
+    </div>
+  `;
 }
 
 function loadSales() {
   const salesSelect = document.getElementById("sales");
   if (!salesSelect) return;
-  if (current.role === "sales") {
-    salesSelect.innerHTML = `<option value="${current.u}">${current.name}</option>`;
-    salesSelect.value = current.u;
-    return;
-  }
   salesSelect.innerHTML = users.filter(u => u.role === "sales").map(u => `<option value="${u.u}">${u.name}</option>`).join("");
 }
 
 async function addHotel() {
-  const salesSelect = document.getElementById("sales");
-  const user = users.find(x => x.u === salesSelect.value);
-  if (!user) { alert("Please assign a valid active manager."); return; }
-  const checkedInputElements = document.querySelectorAll(".hotel-add-chan-checkbox:checked");
-  const cleanChannelsArray = Array.from(checkedInputElements).map(el => el.value);
+  const checked = document.querySelectorAll(".hotel-add-chan-checkbox:checked");
+  const channels = Array.from(checked).map(el => el.value);
+  const user = users.find(x => x.u === document.getElementById("sales").value);
 
   await fetch(API_URL, {
     method: "POST",
@@ -564,226 +677,30 @@ async function addHotel() {
       salesKey: user.u, 
       salesPerson: user.name,
       type: document.getElementById("type").value, 
-      channels: cleanChannelsArray 
+      channels: channels 
     })
   });
 
   alert("Registry Dataset Synchronized Successfully!");
-  document.getElementById("hName").value = ""; 
-  document.getElementById("cId").value = ""; 
-  document.getElementById("tv").value = ""; 
-  document.getElementById("from").value = ""; 
-  document.getElementById("to").value = ""; 
-  document.getElementById("type").value = "IPTV enterprise";
-  document.querySelectorAll(".hotel-add-chan-checkbox:checked").forEach(el => el.checked = false);
-  await loadFromSheet();
-}
-
-function loadHotels() {
-  const list = getFilteredHotels();
-  window.hotelList = list;
-  const hotelSelect = document.getElementById("hotelSelect");
-  const hotelView = document.getElementById("hotelView");
-  
-  if(!hotelSelect || !hotelView) return;
-
-  hotelSelect.innerHTML = list.map((h, i) => `<option value="${i}">${h.hotelName}</option>`).join("");
-  if (list.length === 0) {
-    hotelView.innerHTML = `<div style='text-align:center; padding: 40px; color:#7f8c8d;'><p>No matching registries found.</p></div>`;
-    return;
-  }
-  hotelSelect.value = "0";
-  loadHotel();
-}
-
-function filterHotels() { loadHotels(); }
-
-function loadHotel() {
-  const list = window.hotelList || [];
-  const hotelSelect = document.getElementById("hotelSelect");
-  const hotelView = document.getElementById("hotelView");
-  if(!hotelSelect || !hotelView) return;
-
-  const h = list[Number(hotelSelect.value)];
-  if (!h) { hotelView.innerHTML = ""; return; }
-
-  const sortedChannelsView = [...(h.channels || [])].sort((a,b) => extractLeadingNumber(a) - extractLeadingNumber(b));
-  const channelTagsHtml = sortedChannelsView.map(c => `<div class="channel-tag">${c}</div>`).join("");
-
-  hotelView.innerHTML = `
-    <div class="display-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
-         <h3 style="margin-bottom:0;">${h.hotelName || ""}</h3>
-         <button class="btn btn-small" style="background-color: var(--primary-light);" onclick="openChannelSwapPage(${h._row})">
-             <i class="fa-solid fa-arrows-rotate"></i> Channel Swap Engine
-         </button>
-      </div>
-      <div class="info-grid">
-        <div class="info-cell"><small>Account Strategist Rep</small><span>${h.salesPerson || ""}</span></div>
-        <div class="info-cell"><small>Circuit ID</small><span>${h.circuitId || "N/A"}</span></div>
-        <div class="info-cell"><small>Active Displays Count</small><span>${h.tvPoints || 0} Units Assigned</span></div>
-        <div class="info-cell"><small>Solution Type</small><span>${h.type || "IPTV enterprise"}</span></div>
-      </div>
-      <div>
-        <label style="margin-bottom:12px; display:block;">Operational Allocation Channels Matrix</label>
-        <div class="tag-container">${channelTagsHtml || '<span style="color:#7f8c8d; font-size:13px;">No channels allocated to this profile yet.</span>'}</div>
-      </div>
-    </div>
-  `;
-}
-
-function openChannelSwapPage(rowId) {
-    activeEditingRowId = rowId;
-    const hotelObj = hotels.find(h => h._row === rowId);
-    if (!hotelObj) return;
-
-    const container = document.getElementById("swapRowsContainer");
-    container.innerHTML = "";
-
-    if (!hotelObj.channels || hotelObj.channels.length === 0) {
-        container.innerHTML = `<p style="color:#7f8c8d; font-size:14px; text-align:center;">This hotel has no current channel listings to swap.</p>`;
-        document.getElementById("channelSwapModal").classList.remove("hidden");
-        return;
-    }
-
-    const sortedCurrentLineup = [...hotelObj.channels].sort((a,b) => extractLeadingNumber(a) - extractLeadingNumber(b));
-    sortedCurrentLineup.forEach((currentChan, index) => {
-        let dropdownHtml = globalMasterChannels.map(mChan => `<option value="${mChan}" ${mChan === currentChan ? 'selected' : ''}>${mChan}</option>`).join('');
-        const rowElement = document.createElement("div");
-        rowElement.className = "swap-row-item";
-        rowElement.innerHTML = `
-            <span style="font-weight:600; font-size:14px; color:var(--text-dark);">${currentChan}</span>
-            <i class="fa-solid fa-arrow-right-long" style="color:#a4b0be;"></i>
-            <select class="swap-dropdown-select-element" data-index="${index}">
-                ${dropdownHtml}
-            </select>
-        `;
-        container.appendChild(rowElement);
-    });
-    document.getElementById("channelSwapModal").classList.remove("hidden");
-}
-
-function closeChannelSwapPage() {
-    document.getElementById("channelSwapModal").classList.add("hidden");
-    activeEditingRowId = null;
-}
-
-async function saveChannelSwapModifications() {
-    if (!activeEditingRowId) return;
-    const hotelObj = hotels.find(h => h._row === activeEditingRowId);
-    if (!hotelObj) return;
-    
-    const selectFields = document.querySelectorAll(".swap-dropdown-select-element");
-    const mutatedChannelsArray = [];
-    selectFields.forEach(select => { if(select.value) mutatedChannelsArray.push(select.value); });
-
-    try {
-        await fetch(API_URL, {
-            method: "POST",
-            body: JSON.stringify({
-                action: "updateChannels",
-                row: Number(activeEditingRowId),
-                hotelName: hotelObj.hotelName, 
-                swappedBy: current.name,      
-                channels: mutatedChannelsArray
-            })
-        });
-        alert("Channel lineup settings saved and logged successfully!");
-        closeChannelSwapPage();
-        await loadFromSheet();
-    } catch(err) {
-        alert("Synchronization framework error saving selection details.");
-        console.error(err);
-    }
-}
-
-function renderHistoryLogPage() {
-    const targetTable = document.getElementById("historyTable");
-    if (!targetTable) return;
-
-    if (current.role !== "admin") {
-        targetTable.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">Access Denied. Admin Permissions required.</td></tr>`;
-        return;
-    }
-    if (!globalSwapLogs || globalSwapLogs.length === 0) {
-        targetTable.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#7f8c8d;">No historical swaps registered in dataset archive yet.</td></tr>`;
-        return;
-    }
-    
-    const historicalFeed = [...globalSwapLogs].reverse();
-    
-    targetTable.innerHTML = historicalFeed.map(log => {
-        const parsedOld = String(log.oldLineup || "").split("|").map(x => `<span class="history-tag">${x}</span>`).join("");
-        const parsedNew = String(log.newLineup || "").split("|").map(x => `<span class="history-tag new">${x}</span>`).join("");
-        
-        let displayDate = "N/A";
-        if (log.timestamp) {
-            try {
-                displayDate = new Date(log.timestamp).toLocaleString();
-            } catch(ex) {
-                displayDate = String(log.timestamp);
-            }
-        }
-
-        return `
-          <tr>
-            <td><small style="color:#7f8c8d; font-weight:600;">${displayDate}</small></td>
-            <td><strong style="color:var(--primary);">${log.hotelName || "Unknown Property"}</strong></td>
-            <td><div style="max-height:80px; overflow-y:auto; display:flex; flex-wrap:wrap; gap:4px;">${parsedOld || "None"}</div></td>
-            <td><div style="max-height:80px; overflow-y:auto; display:flex; flex-wrap:wrap; gap:4px;">${parsedNew || "None"}</div></td>
-            <td><span class="role-badge" style="background:#dcdde1; color:var(--text-dark);">${log.swappedBy || "System"}</span></td>
-          </tr>
-        `;
-    }).join("");
-}
-
-async function del(rowNum, hotelName, salesKey) {
-  if (current.role === "sales" && salesKey !== current.u) { alert("Unauthorized operational permissions violation."); return; }
-  if (!confirm(`Warning: Are you completely certain you intend to purge records matching ${hotelName}? This action is irreversible.`)) return;
-
-  try {
-    await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "delete", row: Number(rowNum) }) });
-  } catch (error) { console.error("Purge operations trace error: ", error); }
-  await loadFromSheet();
+  loadFromSheet();
 }
 
 function loadSummary() {
-  const visible = getVisibleHotels();
-  const map = {}; const countMap = {};
-  visible.forEach(h => {
-    if(h && Array.isArray(h.channels)) {
-      h.channels.forEach(c => {
-        const cleanC = c.trim();
-        if (cleanC) {
-          map[cleanC] = (map[cleanC] || 0) + Number(h.tvPoints || 0);
-          countMap[cleanC] = (countMap[cleanC] || 0) + 1;
-        }
-      });
-    }
-  });
   const summaryTable = document.getElementById("summaryTable");
   if(!summaryTable) return;
-  
-  summaryTable.innerHTML = Object.keys(map).sort((a,b) => extractLeadingNumber(a) - extractLeadingNumber(b)).map(c => {
-    const hotelCount = countMap[c] || 0;
-    return `<tr><td><strong style="color: var(--text-dark); font-size: 16px;">${c}</strong></td><td><strong style="color: var(--primary); font-size: 16px;">${map[c]}</strong> TV points</td><td><span class="role-badge" style="background: var(--accent); color: var(--primary); font-weight: 700; padding: 6px 14px;">${hotelCount} ${hotelCount === 1 ? 'hotel' : 'hotels'}</span></td></tr>`;
-  }).join("");
+  summaryTable.innerHTML = `<tr><td colspan="3" style="text-align:center;">Processing pipeline records optimization metrics...</td></tr>`;
 }
 
 function loadDelete() {
-  const list = getVisibleHotels();
   const delTable = document.getElementById("delTable");
   if(!delTable) return;
+  delTable.innerHTML = hotels.map(h => `<tr><td><strong>${h.hotelName}</strong></td><td>${h.salesPerson}</td><td style="text-align:right;"><button class="btn btn-danger btn-small" onclick="del(${h._row}, '${h.hotelName}')">Drop</button></td></tr>`).join("");
+}
 
-  if (list.length === 0) {
-    delTable.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:30px; color:#7f8c8d;">No active registries found matching profile layout boundaries.</td></tr>`;
-    return;
-  }
-  delTable.innerHTML = list.map((h) => {
-    if (!h || !h.hotelName) return "";
-    const escapedName = (h.hotelName || "").replace(/'/g, "\\'");
-    return `<tr><td><strong>${h.hotelName || ""}</strong></td><td>${h.salesPerson || ""}</td><td style="text-align: right;"><button class="btn btn-danger btn-small" onclick="del(${h._row}, '${escapedName}', '${h.salesKey || ""}')"><i class="fa-solid fa-trash"></i> Drop Profile</button></td></tr>`;
-  }).join("");
+async function del(rowNum, name) {
+  if(!confirm(`Delete operational dataset data profile criteria tracking logs matching: ${name}?`)) return;
+  await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "delete", row: rowNum }) });
+  loadFromSheet();
 }
 
 function logout() { location.reload(); }
