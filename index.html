@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hotel Channel & STB Management System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -140,7 +140,7 @@
         .btn:hover { background: var(--primary-light); }
         .btn-danger { background: var(--danger); }
         .btn-danger:hover { background: #ff4d4d; }
-        .btn-success { background: var(--success); }
+        .btn-success { background: #27ae60; }
         .btn-success:hover { background: #2ecc71; }
         .btn-small { padding: 6px 12px; font-size: 13px; border-radius: 4px; }
         
@@ -441,16 +441,6 @@
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbxa0Ejf39dmUYV4QzLKDglQXNXKPxcv4BGgVNOvcJqof123i41jLxMy2T9rrpJ-5Cvq/exec";
 
-// HARDCODED USER LOGIN DETAILS
-const users = [
-  {u: "admin", p: "admin123", role: "admin", name: "Admin"},
-  {u: "asanka", p: "1234", role: "sales", name: "Asanka"},
-  {u: "hadi", p: "1234", role: "sales", name: "Hadi"},
-  {u: "roy", p: "1234", role: "sales", name: "Roy"},
-  {u: "sanjaya", p: "1234", role: "sales", name: "Sanjaya"},
-  {u: "lasan", p: "1234", role: "sales", name: "Lasan"}
-];
-
 let current = null;
 let hotels = [];
 let globalMasterChannels = []; 
@@ -539,25 +529,52 @@ function renderChannelCheckboxes() {
     `).join("");
 }
 
-function login() {
+async function login() {
   const usernameInput = document.getElementById("u").value.trim().toLowerCase();
   const passwordInput = document.getElementById("p").value;
 
-  current = users.find(x => x.u === usernameInput && x.p === passwordInput);
-  
-  if (current) {
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("app").style.display = "block";
+  if (!usernameInput || !passwordInput) {
+     alert("Please enter both username and password.");
+     return;
+  }
 
-    document.getElementById("userNameDisplay").innerText = current.name;
-    document.getElementById("avatarLetter").innerText = current.name.charAt(0).toUpperCase();
-    document.getElementById("userBadgeSlot").innerHTML = `<span class='role-badge ${current.role === 'admin' ? 'admin' : ''}'>${current.role}</span>`;
+  try {
+    const signInBtn = document.querySelector(".login-box .btn span");
+    if(signInBtn) signInBtn.innerText = "Verifying...";
 
-    setupRole();
-    loadSales();
-    loadFromSheet();
-  } else {
-    alert("Invalid Credentials Entered. Access Denied.");
+    const response = await fetch(API_URL, {
+       method: "POST",
+       body: JSON.stringify({
+          action: "login",
+          username: usernameInput,
+          password: passwordInput
+       })
+    });
+    
+    const result = await response.json();
+    if (signInBtn) signInBtn.innerText = "Secure Sign In";
+
+    if (result.success) {
+      current = result.user; 
+      
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("app").style.display = "block";
+
+      userNameDisplay.innerText = current.name;
+      avatarLetter.innerText = current.name.charAt(0).toUpperCase();
+      userBadgeSlot.innerHTML = `<span class='role-badge ${current.role === 'admin' ? 'admin' : ''}'>${current.role}</span>`;
+
+      setupRole();
+      loadSales();
+      await loadFromSheet();
+    } else {
+      alert("Invalid Credentials Entered. Access Denied.");
+    }
+  } catch(err) {
+     console.error("Authentication handshake error: ", err);
+     alert("Network connection error encountered checking credentials.");
+     const signInBtn = document.querySelector(".login-box .btn span");
+     if(signInBtn) signInBtn.innerText = "Secure Sign In";
   }
 }
 
@@ -601,7 +618,7 @@ function getVisibleHotels() {
 }
 
 function getFilteredHotels() {
-  const q = (document.getElementById("hotelSearch").value || "").trim().toLowerCase();
+  const q = (hotelSearch.value || "").trim().toLowerCase();
   const list = getVisibleHotels();
   if (!q) return list;
   return list.filter(h => {
@@ -634,6 +651,7 @@ function renderDash() {
       </div>
     `;
     
+    // Fallback display if user roster is loaded dynamically now
     const staticSalesKeys = ["asanka", "hadi", "roy", "sanjaya", "lasan"];
     staticSalesKeys.forEach((key, idx) => {
       const list = hotels.filter(h => (h.salesKey || "") === key);
@@ -702,6 +720,13 @@ async function addHotel() {
   });
 
   alert("Registry Dataset Synchronized Successfully!");
+  document.getElementById("hName").value = ""; 
+  document.getElementById("cId").value = ""; 
+  document.getElementById("tv").value = ""; 
+  document.getElementById("from").value = ""; 
+  document.getElementById("to").value = ""; 
+  document.getElementById("type").value = "IPTV enterprise";
+  document.querySelectorAll(".hotel-add-chan-checkbox:checked").forEach(el => el.checked = false);
   await loadFromSheet();
 }
 
@@ -803,19 +828,24 @@ async function saveChannelSwapModifications() {
     const mutatedChannelsArray = [];
     selectFields.forEach(select => { if(select.value) mutatedChannelsArray.push(select.value); });
 
-    await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-            action: "updateChannels",
-            row: Number(activeEditingRowId),
-            hotelName: hotelObj.hotelName, 
-            swappedBy: current.name,      
-            channels: mutatedChannelsArray
-        })
-    });
-    alert("Channel lineup settings saved and logged successfully!");
-    closeChannelSwapPage();
-    await loadFromSheet();
+    try {
+        await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "updateChannels",
+                row: Number(activeEditingRowId),
+                hotelName: hotelObj.hotelName, 
+                swappedBy: current.name,      
+                channels: mutatedChannelsArray
+            })
+        });
+        alert("Channel lineup settings saved and logged successfully!");
+        closeChannelSwapPage();
+        await loadFromSheet();
+    } catch(err) {
+        alert("Synchronization framework error saving selection details.");
+        console.error(err);
+    }
 }
 
 function renderHistoryLogPage() {
@@ -824,6 +854,10 @@ function renderHistoryLogPage() {
 
     if (current.role !== "admin") {
         targetTable.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">Access Denied. Admin Permissions required.</td></tr>`;
+        return;
+    }
+    if (!globalSwapLogs || globalSwapLogs.length === 0) {
+        targetTable.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#7f8c8d;">No historical swaps registered in dataset archive yet.</td></tr>`;
         return;
     }
     
@@ -852,6 +886,9 @@ function renderHistoryLogPage() {
 
 async function submitStbRequest() {
     const hName = document.getElementById("stbHotelName").value.trim();
+    const area = document.getElementById("stbArea").value.trim();
+    const address = document.getElementById("stbAddress").value.trim();
+    const circuit = document.getElementById("stbCircuit").value.trim();
     const qty = Number(document.getElementById("stbQty").value);
     const platform = document.getElementById("stbPlatform").value;
 
@@ -860,21 +897,31 @@ async function submitStbRequest() {
         return;
     }
 
-    await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-            action: "submitStbRequest",
-            hotelName: hName,
-            area: document.getElementById("stbArea").value.trim(),
-            address: document.getElementById("stbAddress").value.trim(),
-            circuitId: document.getElementById("stbCircuit").value.trim(),
-            qty: qty,
-            platform: platform,
-            salesRep: current.name
-        })
-    });
-    alert("STB Requirement request uploaded successfully!");
-    await loadFromSheet();
+    try {
+        await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "submitStbRequest",
+                hotelName: hName,
+                area: area,
+                address: address,
+                circuitId: circuit,
+                qty: qty,
+                platform: platform,
+                salesRep: current.name
+            })
+        });
+        alert("STB Requirement request uploaded successfully!");
+        document.getElementById("stbHotelName").value = "";
+        document.getElementById("stbArea").value = "";
+        document.getElementById("stbAddress").value = "";
+        document.getElementById("stbCircuit").value = "";
+        document.getElementById("stbQty").value = "";
+        await loadFromSheet();
+    } catch(e) {
+        alert("Error dispatching STB form request.");
+        console.error(e);
+    }
 }
 
 function renderStbDashboard() {
@@ -899,48 +946,100 @@ function renderStbDashboard() {
         `;
     }).join("");
 
+    if (!globalStbRequests || globalStbRequests.length === 0) {
+        queueBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#7f8c8d;">No active STB tickets currently in the pipeline queue.</td></tr>`;
+        return;
+    }
+
     queueBody.innerHTML = globalStbRequests.map(req => {
-        const selectHtml = (String(req.platform).toLowerCase() === 'suntech') ?
-            `<select id="modelSelect_${req._row}"><option value="Hwacom">Hwacom</option><option value="Netgem">Netgem</option></select>` :
-            (String(req.platform).toLowerCase() === 'mit') ? 
-            `<select id="modelSelect_${req._row}"><option value="MIT">MIT</option><option value="SDMC">SDMC</option></select>` : "";
+        let selectHtml = '';
+        if (String(req.platform).toLowerCase() === 'suntech') {
+            selectHtml = `
+                <select id="modelSelect_${req._row}" style="padding: 6px; font-size: 13px; margin-bottom: 5px; width: 100%; max-width: 130px; border: 1px solid var(--border-color); border-radius: 4px; background: #fff;">
+                    <option value="Hwacom">Hwacom</option>
+                    <option value="Netgem">Netgem</option>
+                </select><br/>
+            `;
+        } else if (String(req.platform).toLowerCase() === 'mit') {
+            selectHtml = `
+                <select id="modelSelect_${req._row}" style="padding: 6px; font-size: 13px; margin-bottom: 5px; width: 100%; max-width: 130px; border: 1px solid var(--border-color); border-radius: 4px; background: #fff;">
+                    <option value="MIT">MIT</option>
+                    <option value="SDMC">SDMC</option>
+                </select><br/>
+            `;
+        }
 
         const actionCell = req.status.toLowerCase() === 'pending' ?
-            `${selectHtml}<button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, '${req.platform}', ${req.qty})">Approve & Issue</button>` :
-            `<span style="color:#27ae60;">Handed Over</span>`;
+            `${selectHtml}<button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, '${req.platform}', ${req.qty})"><i class="fa-solid fa-square-check"></i> Approve & Issue</button>` :
+            `<span style="color:#27ae60; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Handed Over</span>`;
 
-        return `<tr><td><strong>${req.hotelName}</strong></td><td><code>${req.circuitId}</code></td><td>${req.platform}</td><td>${req.qty}</td><td>${req.status}</td><td>${actionCell}</td></tr>`;
+        return `
+            <tr>
+                <td><strong>${req.hotelName}</strong><br><small style="color:#7f8c8d;">${req.area || 'N/A'} | Rep: ${req.salesRep}</small></td>
+                <td><code>${req.circuitId || 'N/A'}</code></td>
+                <td><span class="channel-tag">${req.platform}</span></td>
+                <td><strong>${req.qty} Pcs</strong></td>
+                <td><span class="status-badge status-${req.status.toLowerCase()}">${req.status}</span></td>
+                <td style="text-align: right;">${actionCell}</td>
+            </tr>
+        `;
     }).join("");
 }
 
 async function addIncomingStock() {
-    await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ 
-            action: "addIncomingStock", 
-            platform: document.getElementById("incomingPlatform").value, 
-            qty: document.getElementById("incomingQty").value, 
-            receivedDate: document.getElementById("incomingDate").value 
-        })
-    });
-    alert("Inbound stock updated.");
-    await loadFromSheet();
+    const platform = document.getElementById("incomingPlatform").value;
+    const qty = Number(document.getElementById("incomingQty").value);
+    const date = document.getElementById("incomingDate").value;
+
+    if (!qty || qty <= 0) { alert("Please input a valid inbound product volume count."); return; }
+    if (!date) { alert("Please select a valid stock receive date."); return; }
+
+    try {
+        await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "addIncomingStock", platform: platform, qty: qty, receivedDate: date })
+        });
+        alert(`Injected ${qty} units cleanly into the ${platform} storage pipeline!`);
+        document.getElementById("incomingQty").value = "";
+        document.getElementById("incomingDate").value = "";
+        await loadFromSheet();
+    } catch(e) {
+        alert("Stock management system allocation runtime script failed.");
+    }
 }
 
 async function issueStbDevice(rowId, platform, qty) {
     const selectEl = document.getElementById(`modelSelect_${rowId}`);
-    platform = selectEl ? selectEl.value : platform;
-    await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "fulfillStbRequest", row: Number(rowId), platform: platform, qty: qty })
-    });
-    await loadFromSheet();
+    if (selectEl) {
+        platform = selectEl.value;
+    }
+
+    const platformStock = globalStbStock[platform] || { onHand: 0 };
+    if (platformStock.onHand < qty) {
+        if (!confirm(`Caution: Order payload size exceeds currently listed 'On Hand' metrics for ${platform}. Force tracking overrides?`)) return;
+    } else {
+        if (!confirm(`Are you certain you wish to assign ${qty} ${platform} STB nodes to this property profile?`)) return;
+    }
+
+    try {
+        await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "fulfillStbRequest", row: Number(rowId), platform: platform, qty: qty })
+        });
+        alert("STB ticket processed. Inventory log updated!");
+        await loadFromSheet();
+    } catch(err) {
+        alert("Fulfillment tracking execution exception occurred.");
+    }
 }
 
 async function del(rowNum, hotelName, salesKey) {
-  if (current.role === "sales" && salesKey !== current.u) return;
-  if (!confirm(`Delete ${hotelName}?`)) return;
-  await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "delete", row: Number(rowNum) }) });
+  if (current.role === "sales" && salesKey !== current.u) { alert("Unauthorized operational permissions violation."); return; }
+  if (!confirm(`Warning: Are you completely certain you intend to purge records matching ${hotelName}? This action is irreversible.`)) return;
+
+  try {
+    await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "delete", row: Number(rowNum) }) });
+  } catch (error) { console.error("Purge operations trace error: ", error); }
   await loadFromSheet();
 }
 
@@ -963,7 +1062,7 @@ function loadSummary() {
   
   summaryTable.innerHTML = Object.keys(map).sort((a,b) => extractLeadingNumber(a) - extractLeadingNumber(b)).map(c => {
     const hotelCount = countMap[c] || 0;
-    return `<tr><td><strong>${c}</strong></td><td>${map[c]}</td><td>${hotelCount}</td></tr>`;
+    return `<tr><td><strong style="color: var(--text-dark); font-size: 16px;">${c}</strong></td><td><strong style="color: var(--primary); font-size: 16px;">${map[c]}</strong> TV points</td><td><span class="role-badge" style="background: var(--accent); color: var(--primary); font-weight: 700; padding: 6px 14px;">${hotelCount} ${hotelCount === 1 ? 'hotel' : 'hotels'}</span></td></tr>`;
   }).join("");
 }
 
@@ -971,7 +1070,16 @@ function loadDelete() {
   const list = getVisibleHotels();
   const delTable = document.getElementById("delTable");
   if(!delTable) return;
-  delTable.innerHTML = list.map((h) => `<tr><td><strong>${h.hotelName}</strong></td><td>${h.salesPerson}</td><td><button class="btn btn-danger" onclick="del(${h._row}, '${h.hotelName}', '${h.salesKey}')">Delete</button></td></tr>`).join("");
+
+  if (list.length === 0) {
+    delTable.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:30px; color:#7f8c8d;">No active registries found matching profile layout boundaries.</td></tr>`;
+    return;
+  }
+  delTable.innerHTML = list.map((h) => {
+    if (!h || !h.hotelName) return "";
+    const escapedName = (h.hotelName || "").replace(/'/g, "\\'");
+    return `<tr><td><strong>${h.hotelName || ""}</strong></td><td>${h.salesPerson || ""}</td><td style="text-align: right;"><button class="btn btn-danger btn-small" onclick="del(${h._row}, '${escapedName}', '${h.salesKey || ""}')"><i class="fa-solid fa-trash"></i> Drop Profile</button></td></tr>`;
+  }).join("");
 }
 
 function logout() { location.reload(); }
