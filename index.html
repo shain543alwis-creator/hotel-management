@@ -949,18 +949,30 @@ async function addIncomingStock() {
     const platform = document.getElementById("incomingPlatform").value;
     const qty = Number(document.getElementById("incomingQty").value);
 
-    if (!qty || qty <= 0) { alert("Please input a valid inbound product volume count."); return; }
+    if (!qty || qty <= 0) { 
+        alert("Please input a valid inbound product volume count."); 
+        return; 
+    }
 
     try {
-        await fetch(API_URL, {
+        const response = await fetch(API_URL, {
             method: "POST",
             body: JSON.stringify({ action: "addIncomingStock", platform: platform, qty: qty })
         });
-        alert(`Injected ${qty} units cleanly into the ${platform} storage pipeline!`);
-        document.getElementById("incomingQty").value = "";
-        await loadFromSheet();
+        
+        const resultText = await response.text();
+        
+        // Check if the backend returned an error string
+        if (resultText.includes("Error")) {
+            alert(resultText);
+        } else {
+            alert(`Injected ${qty} units cleanly into the ${platform} storage pipeline!`);
+            document.getElementById("incomingQty").value = "";
+            await loadFromSheet();
+        }
     } catch(e) {
         alert("Stock management system allocation runtime script failed.");
+        console.error(e);
     }
 }
 
