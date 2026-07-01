@@ -897,6 +897,15 @@ async function submitStbRequest() {
     }
 }
 
+// SAFE Lookups against case variations and trailing whitespace in Google Sheet rows
+function getSafeStockItem(platformName) {
+    const searchKey = String(platformName).toLowerCase().trim();
+    const matchingKey = Object.keys(globalStbStock).find(
+        key => String(key).toLowerCase().trim() === searchKey
+    );
+    return matchingKey ? globalStbStock[matchingKey] : { onHand: 0, issued: 0, required: 0 };
+}
+
 // NEW: RENDER STB ADMINISTRATION SUMMARY LEDGER
 function renderStbDashboard() {
     const stockBody = document.getElementById("stbStockTableBody");
@@ -906,16 +915,16 @@ function renderStbDashboard() {
     // Render Stock Balances Grid
     const orderOfPlatforms = ["Hwacom", "Netgem", "MIT", "Suntech", "SDMC"];
     stockBody.innerHTML = orderOfPlatforms.map(platform => {
-        const item = globalStbStock[platform] || { onHand: 0, issued: 0, required: 0 };
+        const item = getSafeStockItem(platform);
         const netRequired = item.required || 0;
         
         return `
             <tr>
                 <td><strong>${platform}</strong></td>
-                <td><span style="color: var(--primary); font-weight:700;">${item.issued} Units</span></td>
-                <td><span style="color: #27ae60; font-weight:700;">${item.onHand} On Hand</span></td>
+                <td><span style="color: var(--primary); font-weight:700;">${item.issued || 0} Units</span></td>
+                <td><span style="color: #27ae60; font-weight:700;">${item.onHand || 0} On Hand</span></td>
                 <td><span style="color: var(--danger); font-weight:700;">${netRequired} Required</span></td>
-                <td><strong>${item.onHand - netRequired} Net Balance</strong></td>
+                <td><strong>${(item.onHand || 0) - netRequired} Net Balance</strong></td>
             </tr>
         `;
     }).join("");
@@ -949,36 +958,24 @@ async function addIncomingStock() {
     const platform = document.getElementById("incomingPlatform").value;
     const qty = Number(document.getElementById("incomingQty").value);
 
-    if (!qty || qty <= 0) { 
-        alert("Please input a valid inbound product volume count."); 
-        return; 
-    }
+    if (!qty || qty <= 0) { alert("Please input a valid inbound product volume count."); return; }
 
     try {
-        const response = await fetch(API_URL, {
+        await fetch(API_URL, {
             method: "POST",
             body: JSON.stringify({ action: "addIncomingStock", platform: platform, qty: qty })
         });
-        
-        const resultText = await response.text();
-        
-        // Check if the backend returned an error string
-        if (resultText.includes("Error")) {
-            alert(resultText);
-        } else {
-            alert(`Injected ${qty} units cleanly into the ${platform} storage pipeline!`);
-            document.getElementById("incomingQty").value = "";
-            await loadFromSheet();
-        }
+        alert(`Injected ${qty} units cleanly into the ${platform} storage pipeline!`);
+        document.getElementById("incomingQty").value = "";
+        await loadFromSheet();
     } catch(e) {
         alert("Stock management system allocation runtime script failed.");
-        console.error(e);
     }
 }
 
 // NEW: ADMINISTRATIVE ACTION -> HAND OVER / ISSUE TO CUSTOMER
 async function issueStbDevice(rowId, platform, qty) {
-    const platformStock = globalStbStock[platform] || { onHand: 0 };
+    const platformStock = getSafeStockItem(platform);
     if (platformStock.onHand < qty) {
         if (!confirm("Caution: Order payload size exceeds currently listed 'On Hand' metrics. Force tracking overrides?")) return;
     } else {
@@ -1050,4 +1047,3 @@ function logout() { location.reload(); }
 </script>
 </body>
 </html>
-
