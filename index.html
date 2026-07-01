@@ -292,11 +292,8 @@
                     <div>
                         <label>Hardware Platform Selection Dropdown</label>
                         <select id="stbPlatform">
-                            <option value="Hwacom">Hwacom</option>
-                            <option value="Netgem">Netgem</option>
-                            <option value="MIT">MIT</option>
                             <option value="Suntech">Suntech</option>
-                            <option value="SDMC">SDMC</option>
+                            <option value="MIT">MIT</option>
                         </select>
                     </div>
                 </div>
@@ -454,6 +451,7 @@ let globalMasterChannels = [];
 let globalSwapLogs = []; 
 let activeEditingRowId = null;
 
+// New Global State Memory Variables for STB Processing
 let globalStbStock = {};
 let globalStbRequests = [];
 
@@ -501,6 +499,8 @@ async function loadFromSheet() {
     globalMasterChannels = rawChannels;
     
     globalSwapLogs = parsedPayload.swapHistory || [];
+    
+    // Process and ingest new STB pipeline objects
     globalStbStock = parsedPayload.stbStock || {};
     globalStbRequests = parsedPayload.stbRequests || [];
     
@@ -581,7 +581,7 @@ function show(v) {
     document.getElementById("tab-" + x)?.classList.remove("active");
   });
   document.getElementById(v).classList.remove("hidden");
-  document.getElementById("tab-" + v)?.add("active");
+  document.getElementById("tab-" + v)?.classList.add("active");
 
   if (v === "channels") loadSummary();
   if (v === "deletePage") loadDelete();
@@ -730,7 +730,6 @@ function loadHotel() {
   const sortedChannelsView = [...(h.channels || [])].sort((a,b) => extractLeadingNumber(a) - extractLeadingNumber(b));
   const channelTagsHtml = sortedChannelsView.map(c => `<div class="channel-tag">${c}</div>`).join("");
 
-  // FIX: Added Agreement Start Date and Agreement Expiration Deadline structures into info-grid template string
   hotelView.innerHTML = `
     <div class="display-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
@@ -744,8 +743,6 @@ function loadHotel() {
         <div class="info-cell"><small>Circuit ID</small><span>${h.circuitId || "N/A"}</span></div>
         <div class="info-cell"><small>Active Displays Count</small><span>${h.tvPoints || 0} Units Assigned</span></div>
         <div class="info-cell"><small>Solution Type</small><span>${h.type || "IPTV enterprise"}</span></div>
-        <div class="info-cell"><small>Agreement Start Date</small><span>${h.from || "N/A"}</span></div>
-        <div class="info-cell"><small>Agreement Expiration Deadline</small><span>${h.to || "N/A"}</span></div>
       </div>
       <div>
         <label style="margin-bottom:12px; display:block;">Operational Allocation Channels Matrix</label>
@@ -856,6 +853,7 @@ function renderHistoryLogPage() {
     }).join("");
 }
 
+// NEW: DISPATCH STB REQUEST WORKFLOW (SALES INTERFACE Action)
 async function submitStbRequest() {
     const hName = document.getElementById("stbHotelName").value.trim();
     const area = document.getElementById("stbArea").value.trim();
@@ -896,11 +894,13 @@ async function submitStbRequest() {
     }
 }
 
+// NEW: RENDER STB ADMINISTRATION SUMMARY LEDGER
 function renderStbDashboard() {
     const stockBody = document.getElementById("stbStockTableBody");
     const queueBody = document.getElementById("stbRequestsQueueBody");
     if (!stockBody || !queueBody) return;
 
+    // Render Stock Balances Grid
     const orderOfPlatforms = ["Hwacom", "Netgem", "MIT", "Suntech", "SDMC"];
     stockBody.innerHTML = orderOfPlatforms.map(platform => {
         const item = globalStbStock[platform] || { onHand: 0, issued: 0, required: 0 };
@@ -917,15 +917,36 @@ function renderStbDashboard() {
         `;
     }).join("");
 
+    // Render Processing Pipeline Requests Queue
     if (!globalStbRequests || globalStbRequests.length === 0) {
         queueBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#7f8c8d;">No active STB tickets currently in the pipeline queue.</td></tr>`;
         return;
     }
 
     queueBody.innerHTML = globalStbRequests.map(req => {
-        const actionCell = req.status.toLowerCase() === 'pending' ?
-            `<button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, '${req.platform}', ${req.qty})"><i class="fa-solid fa-square-check"></i> Approve & Issue</button>` :
-            `<span style="color:#27ae60; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Handed Over</span>`;
+        let actionCell = "";
+        if (req.status.toLowerCase() === 'pending') {
+            // Mapping allowed physical hardware types based on requirements
+            const platformMapping = {
+                "Suntech": ["Hwacom", "Netgem"],
+                "MIT": ["MIT", "SDMC"]
+            };
+            const allowedIssuance = platformMapping[req.platform] || [req.platform];
+            let optionsHtml = allowedIssuance.map(p => `<option value="${p}">${p}</option>`).join("");
+            
+            actionCell = `
+                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                    <select id="issueSelect_${req._row}" style="margin-bottom:0; padding:6px; font-size:13px; width:auto; display:inline-block;">
+                        ${optionsHtml}
+                    </select>
+                    <button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, ${req.qty})">
+                        <i class="fa-solid fa-square-check"></i> Approve & Issue
+                    </button>
+                </div>
+            `;
+        } else {
+            actionCell = `<span style="color:#27ae60; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Handed Over</span>`;
+        }
 
         return `
             <tr>
@@ -940,6 +961,7 @@ function renderStbDashboard() {
     }).join("");
 }
 
+// NEW: STOCK ADJUSTMENT ARRIVALS MANAGEMENT INGESTION
 async function addIncomingStock() {
     const platform = document.getElementById("incomingPlatform").value;
     const qty = Number(document.getElementById("incomingQty").value);
@@ -959,7 +981,12 @@ async function addIncomingStock() {
     }
 }
 
-async function issueStbDevice(rowId, platform, qty) {
+// NEW: ADMINISTRATIVE ACTION -> HAND OVER / ISSUE TO CUSTOMER WITH DYNAMIC PLATFORM EXTRACTION
+async function issueStbDevice(rowId, qty) {
+    const platformSelect = document.getElementById(`issueSelect_${rowId}`);
+    if (!platformSelect) return;
+    const platform = platformSelect.value;
+
     const platformStock = globalStbStock[platform] || { onHand: 0 };
     if (platformStock.onHand < qty) {
         if (!confirm("Caution: Order payload size exceeds currently listed 'On Hand' metrics. Force tracking overrides?")) return;
