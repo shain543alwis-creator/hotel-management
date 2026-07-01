@@ -292,8 +292,11 @@
                     <div>
                         <label>Hardware Platform Selection Dropdown</label>
                         <select id="stbPlatform">
-                            <option value="Suntech">Suntech</option>
+                            <option value="Hwacom">Hwacom</option>
+                            <option value="Netgem">Netgem</option>
                             <option value="MIT">MIT</option>
+                            <option value="Suntech">Suntech</option>
+                            <option value="SDMC">SDMC</option>
                         </select>
                     </div>
                 </div>
@@ -314,6 +317,7 @@
                                 <th>STB on Hand</th>
                                 <th>Total STB Requirement</th>
                                 <th>Net Inventory Status</th>
+                                <th>Last Received Date</th>
                             </tr>
                         </thead>
                         <tbody id="stbStockTableBody">
@@ -322,7 +326,7 @@
                 </div>
 
                 <h2 class="section-title"><i class="fa-solid fa-truck-ramp-box"></i> Ingest New Inbound Inventory Cargo</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; align-items: flex-end; margin-bottom: 35px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; align-items: flex-end; margin-bottom: 35px;">
                     <div>
                         <label>Platform Target</label>
                         <select id="incomingPlatform">
@@ -336,6 +340,10 @@
                     <div>
                         <label>Arrived Device Quantity</label>
                         <input type="number" id="incomingQty" placeholder="e.g. 100" style="margin-bottom:0;">
+                    </div>
+                    <div>
+                        <label>Stock Receive Date</label>
+                        <input type="date" id="incomingDate" style="margin-bottom:0;">
                     </div>
                     <div>
                         <button class="btn" onclick="addIncomingStock()" style="width:100%;">
@@ -451,7 +459,7 @@ let globalMasterChannels = [];
 let globalSwapLogs = []; 
 let activeEditingRowId = null;
 
-// New Global State Memory Variables for STB Processing
+// Global State Memory Variables for STB Processing
 let globalStbStock = {};
 let globalStbRequests = [];
 
@@ -853,7 +861,6 @@ function renderHistoryLogPage() {
     }).join("");
 }
 
-// NEW: DISPATCH STB REQUEST WORKFLOW (SALES INTERFACE Action)
 async function submitStbRequest() {
     const hName = document.getElementById("stbHotelName").value.trim();
     const area = document.getElementById("stbArea").value.trim();
@@ -894,7 +901,6 @@ async function submitStbRequest() {
     }
 }
 
-// NEW: RENDER STB ADMINISTRATION SUMMARY LEDGER
 function renderStbDashboard() {
     const stockBody = document.getElementById("stbStockTableBody");
     const queueBody = document.getElementById("stbRequestsQueueBody");
@@ -903,7 +909,7 @@ function renderStbDashboard() {
     // Render Stock Balances Grid
     const orderOfPlatforms = ["Hwacom", "Netgem", "MIT", "Suntech", "SDMC"];
     stockBody.innerHTML = orderOfPlatforms.map(platform => {
-        const item = globalStbStock[platform] || { onHand: 0, issued: 0, required: 0 };
+        const item = globalStbStock[platform] || { onHand: 0, issued: 0, required: 0, lastReceived: "" };
         const netRequired = item.required || 0;
         
         return `
@@ -913,6 +919,7 @@ function renderStbDashboard() {
                 <td><span style="color: #27ae60; font-weight:700;">${item.onHand} On Hand</span></td>
                 <td><span style="color: var(--danger); font-weight:700;">${netRequired} Required</span></td>
                 <td><strong>${item.onHand - netRequired} Net Balance</strong></td>
+                <td><small style="color:#7f8c8d; font-weight:600;">${item.lastReceived || "N/A"}</small></td>
             </tr>
         `;
     }).join("");
@@ -924,29 +931,9 @@ function renderStbDashboard() {
     }
 
     queueBody.innerHTML = globalStbRequests.map(req => {
-        let actionCell = "";
-        if (req.status.toLowerCase() === 'pending') {
-            // Mapping allowed physical hardware types based on requirements
-            const platformMapping = {
-                "Suntech": ["Hwacom", "Netgem"],
-                "MIT": ["MIT", "SDMC"]
-            };
-            const allowedIssuance = platformMapping[req.platform] || [req.platform];
-            let optionsHtml = allowedIssuance.map(p => `<option value="${p}">${p}</option>`).join("");
-            
-            actionCell = `
-                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-                    <select id="issueSelect_${req._row}" style="margin-bottom:0; padding:6px; font-size:13px; width:auto; display:inline-block;">
-                        ${optionsHtml}
-                    </select>
-                    <button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, ${req.qty})">
-                        <i class="fa-solid fa-square-check"></i> Approve & Issue
-                    </button>
-                </div>
-            `;
-        } else {
-            actionCell = `<span style="color:#27ae60; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Handed Over</span>`;
-        }
+        const actionCell = req.status.toLowerCase() === 'pending' ?
+            `<button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, '${req.platform}', ${req.qty})"><i class="fa-solid fa-square-check"></i> Approve & Issue</button>` :
+            `<span style="color:#27ae60; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Handed Over</span>`;
 
         return `
             <tr>
@@ -961,32 +948,30 @@ function renderStbDashboard() {
     }).join("");
 }
 
-// NEW: STOCK ADJUSTMENT ARRIVALS MANAGEMENT INGESTION
+// FIXED: STOCK ARRIVALS MANAGEMENT CAPTURES AND SENDS INPUT RECEIVE DATE
 async function addIncomingStock() {
     const platform = document.getElementById("incomingPlatform").value;
     const qty = Number(document.getElementById("incomingQty").value);
+    const date = document.getElementById("incomingDate").value;
 
     if (!qty || qty <= 0) { alert("Please input a valid inbound product volume count."); return; }
+    if (!date) { alert("Please select a valid stock receive date."); return; }
 
     try {
         await fetch(API_URL, {
             method: "POST",
-            body: JSON.stringify({ action: "addIncomingStock", platform: platform, qty: qty })
+            body: JSON.stringify({ action: "addIncomingStock", platform: platform, qty: qty, receivedDate: date })
         });
         alert(`Injected ${qty} units cleanly into the ${platform} storage pipeline!`);
         document.getElementById("incomingQty").value = "";
+        document.getElementById("incomingDate").value = "";
         await loadFromSheet();
     } catch(e) {
         alert("Stock management system allocation runtime script failed.");
     }
 }
 
-// NEW: ADMINISTRATIVE ACTION -> HAND OVER / ISSUE TO CUSTOMER WITH DYNAMIC PLATFORM EXTRACTION
-async function issueStbDevice(rowId, qty) {
-    const platformSelect = document.getElementById(`issueSelect_${rowId}`);
-    if (!platformSelect) return;
-    const platform = platformSelect.value;
-
+async function issueStbDevice(rowId, platform, qty) {
     const platformStock = globalStbStock[platform] || { onHand: 0 };
     if (platformStock.onHand < qty) {
         if (!confirm("Caution: Order payload size exceeds currently listed 'On Hand' metrics. Force tracking overrides?")) return;
