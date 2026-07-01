@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hotel Channel & STB Management System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -292,7 +292,11 @@
                     <div>
                         <label>Hardware Platform Selection Dropdown</label>
                         <select id="stbPlatform">
+                            <option value="Hwacom">Hwacom</option>
+                            <option value="Netgem">Netgem</option>
                             <option value="MIT">MIT</option>
+                            <option value="Suntech">Suntech</option>
+                            <option value="SDMC">SDMC</option>
                         </select>
                     </div>
                 </div>
@@ -329,6 +333,7 @@
                             <option value="Hwacom">Hwacom</option>
                             <option value="Netgem">Netgem</option>
                             <option value="MIT">MIT</option>
+                            <option value="Suntech">Suntech</option>
                             <option value="SDMC">SDMC</option>
                         </select>
                     </div>
@@ -354,10 +359,10 @@
                             <tr>
                                 <th>Hotel / Area</th>
                                 <th>Circuit / PBIZ</th>
-                                <th>Platform Requested</th>
+                                <th>Platform</th>
                                 <th>Qty Requested</th>
                                 <th>Workflow State</th>
-                                <th style="text-align: right;">Fulfillment Automation / Select Deployment Model</th>
+                                <th style="text-align: right;">Fulfillment Automation</th>
                             </tr>
                         </thead>
                         <tbody id="stbRequestsQueueBody">
@@ -901,7 +906,7 @@ function renderStbDashboard() {
     const queueBody = document.getElementById("stbRequestsQueueBody");
     if (!stockBody || !queueBody) return;
 
-    // Render Stock Balances Grid
+    // Render Stock Balances Grid (Suntech removed from this view matrix exclusively)
     const orderOfPlatforms = ["Hwacom", "Netgem", "MIT", "SDMC"];
     stockBody.innerHTML = orderOfPlatforms.map(platform => {
         const item = globalStbStock[platform] || { onHand: 0, issued: 0, required: 0, lastReceived: "" };
@@ -926,27 +931,9 @@ function renderStbDashboard() {
     }
 
     queueBody.innerHTML = globalStbRequests.map(req => {
-        let actionCell = `<span style="color:#27ae60; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Handed Over</span>`;
-        
-        if (req.status.toLowerCase() === 'pending') {
-            let optionsHtml = '';
-            if (req.platform.toLowerCase() === 'mit') {
-                optionsHtml = `<option value="MIT">MIT</option><option value="SDMC">SDMC</option>`;
-            } else {
-                optionsHtml = `<option value="${req.platform}">${req.platform}</option>`;
-            }
-
-            actionCell = `
-                <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
-                    <select id="issuePlatform-${req._row}" style="margin-bottom: 0; padding: 6px; font-size: 13px; width: auto; background: #fff;">
-                        ${optionsHtml}
-                    </select>
-                    <button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, ${req.qty})">
-                        <i class="fa-solid fa-square-check"></i> Approve & Issue
-                    </button>
-                </div>
-            `;
-        }
+        const actionCell = req.status.toLowerCase() === 'pending' ?
+            `<button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, '${req.platform}', ${req.qty})"><i class="fa-solid fa-square-check"></i> Approve & Issue</button>` :
+            `<span style="color:#27ae60; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Handed Over</span>`;
 
         return `
             <tr>
@@ -984,11 +971,7 @@ async function addIncomingStock() {
     }
 }
 
-async function issueStbDevice(rowId, qty) {
-    const platformSelect = document.getElementById(`issuePlatform-${rowId}`);
-    const platform = platformSelect ? platformSelect.value : '';
-    if (!platform) { alert("Please choose a hardware allocation target model."); return; }
-
+async function issueStbDevice(rowId, platform, qty) {
     const platformStock = globalStbStock[platform] || { onHand: 0 };
     if (platformStock.onHand < qty) {
         if (!confirm("Caution: Order payload size exceeds currently listed 'On Hand' metrics. Force tracking overrides?")) return;
