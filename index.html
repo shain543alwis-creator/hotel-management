@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hotel Channel & STB Management System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -292,11 +292,8 @@
                     <div>
                         <label>Hardware Platform Selection Dropdown</label>
                         <select id="stbPlatform">
-                            <option value="Hwacom">Hwacom</option>
-                            <option value="Netgem">Netgem</option>
-                            <option value="MIT">MIT</option>
                             <option value="Suntech">Suntech</option>
-                            <option value="SDMC">SDMC</option>
+                            <option value="MIT">MIT</option>
                         </select>
                     </div>
                 </div>
@@ -931,8 +928,25 @@ function renderStbDashboard() {
     }
 
     queueBody.innerHTML = globalStbRequests.map(req => {
+        let selectHtml = '';
+        if (String(req.platform).toLowerCase() === 'suntech') {
+            selectHtml = `
+                <select id="modelSelect_${req._row}" style="padding: 6px; font-size: 13px; margin-bottom: 5px; width: 100%; max-width: 130px; border: 1px solid var(--border-color); border-radius: 4px; background: #fff;">
+                    <option value="Hwacom">Hwacom</option>
+                    <option value="Netgem">Netgem</option>
+                </select><br/>
+            `;
+        } else if (String(req.platform).toLowerCase() === 'mit') {
+            selectHtml = `
+                <select id="modelSelect_${req._row}" style="padding: 6px; font-size: 13px; margin-bottom: 5px; width: 100%; max-width: 130px; border: 1px solid var(--border-color); border-radius: 4px; background: #fff;">
+                    <option value="MIT">MIT</option>
+                    <option value="SDMC">SDMC</option>
+                </select><br/>
+            `;
+        }
+
         const actionCell = req.status.toLowerCase() === 'pending' ?
-            `<button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, '${req.platform}', ${req.qty})"><i class="fa-solid fa-square-check"></i> Approve & Issue</button>` :
+            `${selectHtml}<button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, '${req.platform}', ${req.qty})"><i class="fa-solid fa-square-check"></i> Approve & Issue</button>` :
             `<span style="color:#27ae60; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Handed Over</span>`;
 
         return `
@@ -972,9 +986,14 @@ async function addIncomingStock() {
 }
 
 async function issueStbDevice(rowId, platform, qty) {
+    const selectEl = document.getElementById(`modelSelect_${rowId}`);
+    if (selectEl) {
+        platform = selectEl.value;
+    }
+
     const platformStock = globalStbStock[platform] || { onHand: 0 };
     if (platformStock.onHand < qty) {
-        if (!confirm("Caution: Order payload size exceeds currently listed 'On Hand' metrics. Force tracking overrides?")) return;
+        if (!confirm(`Caution: Order payload size exceeds currently listed 'On Hand' metrics for ${platform}. Force tracking overrides?`)) return;
     } else {
         if (!confirm(`Are you certain you wish to assign ${qty} ${platform} STB nodes to this property profile?`)) return;
     }
