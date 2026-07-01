@@ -289,7 +289,7 @@
                         <label>Number of STBs Required</label>
                         <input type="number" id="stbQty" placeholder="e.g. 10">
                     </div>
-                    <div>
+                    <div id="stbPlatformContainer">
                         <label>Hardware Platform Selection Dropdown</label>
                         <select id="stbPlatform">
                             <option value="Hwacom">Hwacom</option>
@@ -359,7 +359,7 @@
                             <tr>
                                 <th>Hotel / Area</th>
                                 <th>Circuit / PBIZ</th>
-                                <th>Platform</th>
+                                <th>Platform Model variant</th>
                                 <th>Qty Requested</th>
                                 <th>Workflow State</th>
                                 <th style="text-align: right;">Fulfillment Automation</th>
@@ -569,17 +569,20 @@ function setupRole() {
   const channelBtn = document.getElementById("channelBtn");
   const deleteBtn = document.getElementById("deleteBtn");
   const stbAdminBtn = document.getElementById("stbAdminBtn");
+  const stbPlatformContainer = document.getElementById("stbPlatformContainer");
 
   if (current.role === "sales") {
     if(channelBtn) channelBtn.style.display = "none";
     if(historyBtn) historyBtn.style.display = "none"; 
     if(stbAdminBtn) stbAdminBtn.style.display = "none";
     if(deleteBtn) deleteBtn.style.display = "block";
+    if(stbPlatformContainer) stbPlatformContainer.style.display = "none";
   } else {
     if(channelBtn) channelBtn.style.display = "block";
     if(historyBtn) historyBtn.style.display = "block"; 
     if(stbAdminBtn) stbAdminBtn.style.display = "block";
     if(deleteBtn) deleteBtn.style.display = "block";
+    if(stbPlatformContainer) stbPlatformContainer.style.display = "block";
   }
 }
 
@@ -867,7 +870,7 @@ async function submitStbRequest() {
     const address = document.getElementById("stbAddress").value.trim();
     const circuit = document.getElementById("stbCircuit").value.trim();
     const qty = Number(document.getElementById("stbQty").value);
-    const platform = document.getElementById("stbPlatform").value;
+    const platform = current.role === "admin" ? document.getElementById("stbPlatform").value : "Pending";
 
     if (!hName || !qty || qty <= 0) {
         alert("Please specify a valid Hotel Name and STB Quantity.");
@@ -931,15 +934,28 @@ function renderStbDashboard() {
     }
 
     queueBody.innerHTML = globalStbRequests.map(req => {
-        const actionCell = req.status.toLowerCase() === 'pending' ?
-            `<button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, '${req.platform}', ${req.qty})"><i class="fa-solid fa-square-check"></i> Approve & Issue</button>` :
+        const isPending = req.status.toLowerCase() === 'pending';
+        
+        // Admin gets an inline dropdown selection for pending processing lines
+        const platformCell = isPending ?
+            `<select id="issuePlatform-${req._row}" style="padding:6px; font-size:14px; border-radius:4px; border:1px solid var(--border-color); background: #fff;">
+                <option value="Suntech" ${req.platform === 'Suntech' ? 'selected' : ''}>Suntech</option>
+                <option value="MIT" ${req.platform === 'MIT' ? 'selected' : ''}>MIT</option>
+                <option value="Hwacom" ${req.platform === 'Hwacom' ? 'selected' : ''}>Hwacom</option>
+                <option value="SDMC" ${req.platform === 'SDMC' ? 'selected' : ''}>SDMC</option>
+                <option value="Netgem" ${req.platform === 'Netgem' ? 'selected' : ''}>Netgem</option>
+             </select>` :
+            `<span class="channel-tag">${req.platform}</span>`;
+
+        const actionCell = isPending ?
+            `<button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, document.getElementById('issuePlatform-${req._row}').value, ${req.qty})"><i class="fa-solid fa-square-check"></i> Approve & Issue</button>` :
             `<span style="color:#27ae60; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Handed Over</span>`;
 
         return `
             <tr>
                 <td><strong>${req.hotelName}</strong><br><small style="color:#7f8c8d;">${req.area || 'N/A'} | Rep: ${req.salesRep}</small></td>
                 <td><code>${req.circuitId || 'N/A'}</code></td>
-                <td><span class="channel-tag">${req.platform}</span></td>
+                <td>${platformCell}</td>
                 <td><strong>${req.qty} Pcs</strong></td>
                 <td><span class="status-badge status-${req.status.toLowerCase()}">${req.status}</span></td>
                 <td style="text-align: right;">${actionCell}</td>
@@ -948,7 +964,7 @@ function renderStbDashboard() {
     }).join("");
 }
 
-// FIXED: STOCK ARRIVALS MANAGEMENT CAPTURES AND SENDS INPUT RECEIVE DATE
+// STOCK ARRIVALS MANAGEMENT CAPTURES AND SENDS INPUT RECEIVE DATE
 async function addIncomingStock() {
     const platform = document.getElementById("incomingPlatform").value;
     const qty = Number(document.getElementById("incomingQty").value);
