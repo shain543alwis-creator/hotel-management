@@ -292,7 +292,6 @@
                     <div>
                         <label>Hardware Platform Selection Dropdown</label>
                         <select id="stbPlatform">
-                            <option value="Suntech">Suntech</option>
                             <option value="MIT">MIT</option>
                         </select>
                     </div>
@@ -903,7 +902,7 @@ function renderStbDashboard() {
     if (!stockBody || !queueBody) return;
 
     // Render Stock Balances Grid
-    const orderOfPlatforms = ["Hwacom", "Netgem", "MIT", "Suntech", "SDMC"];
+    const orderOfPlatforms = ["Hwacom", "Netgem", "MIT", "SDMC"];
     stockBody.innerHTML = orderOfPlatforms.map(platform => {
         const item = globalStbStock[platform] || { onHand: 0, issued: 0, required: 0, lastReceived: "" };
         const netRequired = item.required || 0;
@@ -931,9 +930,7 @@ function renderStbDashboard() {
         
         if (req.status.toLowerCase() === 'pending') {
             let optionsHtml = '';
-            if (req.platform.toLowerCase() === 'suntech') {
-                optionsHtml = `<option value="Hwacom">Hwacom</option><option value="Netgem">Netgem</option>`;
-            } else if (req.platform.toLowerCase() === 'mit') {
+            if (req.platform.toLowerCase() === 'mit') {
                 optionsHtml = `<option value="MIT">MIT</option><option value="SDMC">SDMC</option>`;
             } else {
                 optionsHtml = `<option value="${req.platform}">${req.platform}</option>`;
