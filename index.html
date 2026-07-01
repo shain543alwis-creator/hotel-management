@@ -292,11 +292,8 @@
                     <div>
                         <label>Hardware Platform Selection Dropdown</label>
                         <select id="stbPlatform">
-                            <option value="Hwacom">Hwacom</option>
-                            <option value="Netgem">Netgem</option>
-                            <option value="MIT">MIT</option>
                             <option value="Suntech">Suntech</option>
-                            <option value="SDMC">SDMC</option>
+                            <option value="MIT">MIT</option>
                         </select>
                     </div>
                 </div>
@@ -897,15 +894,6 @@ async function submitStbRequest() {
     }
 }
 
-// SAFE Lookups against case variations and trailing whitespace in Google Sheet rows
-function getSafeStockItem(platformName) {
-    const searchKey = String(platformName).toLowerCase().trim();
-    const matchingKey = Object.keys(globalStbStock).find(
-        key => String(key).toLowerCase().trim() === searchKey
-    );
-    return matchingKey ? globalStbStock[matchingKey] : { onHand: 0, issued: 0, required: 0 };
-}
-
 // NEW: RENDER STB ADMINISTRATION SUMMARY LEDGER
 function renderStbDashboard() {
     const stockBody = document.getElementById("stbStockTableBody");
@@ -915,16 +903,16 @@ function renderStbDashboard() {
     // Render Stock Balances Grid
     const orderOfPlatforms = ["Hwacom", "Netgem", "MIT", "Suntech", "SDMC"];
     stockBody.innerHTML = orderOfPlatforms.map(platform => {
-        const item = getSafeStockItem(platform);
+        const item = globalStbStock[platform] || { onHand: 0, issued: 0, required: 0 };
         const netRequired = item.required || 0;
         
         return `
             <tr>
                 <td><strong>${platform}</strong></td>
-                <td><span style="color: var(--primary); font-weight:700;">${item.issued || 0} Units</span></td>
-                <td><span style="color: #27ae60; font-weight:700;">${item.onHand || 0} On Hand</span></td>
+                <td><span style="color: var(--primary); font-weight:700;">${item.issued} Units</span></td>
+                <td><span style="color: #27ae60; font-weight:700;">${item.onHand} On Hand</span></td>
                 <td><span style="color: var(--danger); font-weight:700;">${netRequired} Required</span></td>
-                <td><strong>${(item.onHand || 0) - netRequired} Net Balance</strong></td>
+                <td><strong>${item.onHand - netRequired} Net Balance</strong></td>
             </tr>
         `;
     }).join("");
@@ -936,9 +924,29 @@ function renderStbDashboard() {
     }
 
     queueBody.innerHTML = globalStbRequests.map(req => {
-        const actionCell = req.status.toLowerCase() === 'pending' ?
-            `<button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, '${req.platform}', ${req.qty})"><i class="fa-solid fa-square-check"></i> Approve & Issue</button>` :
-            `<span style="color:#27ae60; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Handed Over</span>`;
+        let actionCell = "";
+        if (req.status.toLowerCase() === 'pending') {
+            // Mapping allowed physical hardware types based on requirements
+            const platformMapping = {
+                "Suntech": ["Hwacom", "Netgem"],
+                "MIT": ["MIT", "SDMC"]
+            };
+            const allowedIssuance = platformMapping[req.platform] || [req.platform];
+            let optionsHtml = allowedIssuance.map(p => `<option value="${p}">${p}</option>`).join("");
+            
+            actionCell = `
+                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                    <select id="issueSelect_${req._row}" style="margin-bottom:0; padding:6px; font-size:13px; width:auto; display:inline-block;">
+                        ${optionsHtml}
+                    </select>
+                    <button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, ${req.qty})">
+                        <i class="fa-solid fa-square-check"></i> Approve & Issue
+                    </button>
+                </div>
+            `;
+        } else {
+            actionCell = `<span style="color:#27ae60; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Handed Over</span>`;
+        }
 
         return `
             <tr>
@@ -973,9 +981,13 @@ async function addIncomingStock() {
     }
 }
 
-// NEW: ADMINISTRATIVE ACTION -> HAND OVER / ISSUE TO CUSTOMER
-async function issueStbDevice(rowId, platform, qty) {
-    const platformStock = getSafeStockItem(platform);
+// NEW: ADMINISTRATIVE ACTION -> HAND OVER / ISSUE TO CUSTOMER WITH DYNAMIC PLATFORM EXTRACTION
+async function issueStbDevice(rowId, qty) {
+    const platformSelect = document.getElementById(`issueSelect_${rowId}`);
+    if (!platformSelect) return;
+    const platform = platformSelect.value;
+
+    const platformStock = globalStbStock[platform] || { onHand: 0 };
     if (platformStock.onHand < qty) {
         if (!confirm("Caution: Order payload size exceeds currently listed 'On Hand' metrics. Force tracking overrides?")) return;
     } else {
