@@ -441,22 +441,11 @@
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbxa0Ejf39dmUYV4QzLKDglQXNXKPxcv4BGgVNOvcJqof123i41jLxMy2T9rrpJ-5Cvq/exec";
 
-const users = [
-  {u:"admin",p:"admin123",role:"admin",name:"Admin"},
-  {u:"asanka",p:"1234",role:"sales",name:"Asanka"},
-  {u:"hadi",p:"1234",role:"sales",name:"Hadi"},
-  {u:"roy",p:"1234",role:"sales",name:"Roy"},
-  {u:"sanjaya",p:"1234",role:"sales",name:"Sanjaya"},
-  {u:"lasan",p:"1234",role:"sales",name:"Lasan"}
-];
-
 let current = null;
 let hotels = [];
 let globalMasterChannels = []; 
 let globalSwapLogs = []; 
 let activeEditingRowId = null;
-
-// Global State Memory Variables for STB Processing
 let globalStbStock = {};
 let globalStbRequests = [];
 
@@ -504,8 +493,6 @@ async function loadFromSheet() {
     globalMasterChannels = rawChannels;
     
     globalSwapLogs = parsedPayload.swapHistory || [];
-    
-    // Process and ingest new STB pipeline objects
     globalStbStock = parsedPayload.stbStock || {};
     globalStbRequests = parsedPayload.stbRequests || [];
     
@@ -542,23 +529,53 @@ function renderChannelCheckboxes() {
     `).join("");
 }
 
-function login() {
+async function login() {
   const usernameInput = document.getElementById("u").value.trim().toLowerCase();
   const passwordInput = document.getElementById("p").value;
 
-  current = users.find(x => x.u === usernameInput && x.p === passwordInput);
-  if (!current) { alert("Invalid Credentials Entered. Access Denied."); return; }
+  if (!usernameInput || !passwordInput) {
+     alert("Please enter both username and password.");
+     return;
+  }
 
-  document.getElementById("loginPage").style.display = "none";
-  document.getElementById("app").style.display = "block";
+  try {
+    const signInBtn = document.querySelector(".login-box .btn span");
+    if(signInBtn) signInBtn.innerText = "Verifying...";
 
-  userNameDisplay.innerText = current.name;
-  avatarLetter.innerText = current.name.charAt(0).toUpperCase();
-  userBadgeSlot.innerHTML = `<span class='role-badge ${current.role === 'admin' ? 'admin' : ''}'>${current.role}</span>`;
+    const response = await fetch(API_URL, {
+       method: "POST",
+       body: JSON.stringify({
+          action: "login",
+          username: usernameInput,
+          password: passwordInput
+       })
+    });
+    
+    const result = await response.json();
+    if (signInBtn) signInBtn.innerText = "Secure Sign In";
 
-  setupRole();
-  loadSales();
-  loadFromSheet();
+    if (result.success) {
+      current = result.user; 
+      
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("app").style.display = "block";
+
+      userNameDisplay.innerText = current.name;
+      avatarLetter.innerText = current.name.charAt(0).toUpperCase();
+      userBadgeSlot.innerHTML = `<span class='role-badge ${current.role === 'admin' ? 'admin' : ''}'>${current.role}</span>`;
+
+      setupRole();
+      loadSales();
+      await loadFromSheet();
+    } else {
+      alert("Invalid Credentials Entered. Access Denied.");
+    }
+  } catch(err) {
+     console.error("Authentication handshake error: ", err);
+     alert("Network connection error encountered checking credentials.");
+     const signInBtn = document.querySelector(".login-box .btn span");
+     if(signInBtn) signInBtn.innerText = "Secure Sign In";
+  }
 }
 
 function setupRole() {
@@ -633,13 +650,17 @@ function renderDash() {
         <p><i class="fa-solid fa-tv"></i> Across ${totalTV} Operational Displays</p>
       </div>
     `;
-    users.filter(u => u.role === "sales").forEach((u, idx) => {
-      const list = hotels.filter(h => (h.salesKey || "") === u.u);
+    
+    // Fallback display if user roster is loaded dynamically now
+    const staticSalesKeys = ["asanka", "hadi", "roy", "sanjaya", "lasan"];
+    staticSalesKeys.forEach((key, idx) => {
+      const list = hotels.filter(h => (h.salesKey || "") === key);
+      if (list.length === 0) return;
       const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
       const gradients = ["linear-gradient(135deg, #079992 0%, #38ada9 100%)", "linear-gradient(135deg, #60a3bc 0%, #3c6382 100%)", "linear-gradient(135deg, #e67e22 0%, #d35400 100%)", "linear-gradient(135deg, #78e08f 0%, #38ea92 100%)"];
       dashGrid.innerHTML += `
         <div class="box" style="background: ${gradients[idx % gradients.length]}">
-          <h3>${u.name} Portfolio Balance</h3>
+          <h3>${key.toUpperCase()} Portfolio Balance</h3>
           <div class="stat">${list.length} Accounts</div>
           <p style="margin-bottom: 8px;"><i class="fa-solid fa-display"></i> Servicing ${tv} Terminal Points</p>
           <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">${generateBreakdownHtml(list)}</div>
@@ -668,13 +689,18 @@ function loadSales() {
     salesSelect.value = current.u;
     return;
   }
-  salesSelect.innerHTML = users.filter(u => u.role === "sales").map(u => `<option value="${u.u}">${u.name}</option>`).join("");
+  salesSelect.innerHTML = `
+    <option value="asanka">Asanka</option>
+    <option value="hadi">Hadi</option>
+    <option value="roy">Roy</option>
+    <option value="sanjaya">Sanjaya</option>
+    <option value="lasan">Lasan</option>
+  `;
 }
 
 async function addHotel() {
   const salesSelect = document.getElementById("sales");
-  const user = users.find(x => x.u === salesSelect.value);
-  if (!user) { alert("Please assign a valid active manager."); return; }
+  const selectedText = salesSelect.options[salesSelect.selectedIndex].text;
   const checkedInputElements = document.querySelectorAll(".hotel-add-chan-checkbox:checked");
   const cleanChannelsArray = Array.from(checkedInputElements).map(el => el.value);
 
@@ -686,8 +712,8 @@ async function addHotel() {
       tvPoints: document.getElementById("tv").value,
       from: document.getElementById("from").value, 
       to: document.getElementById("to").value, 
-      salesKey: user.u, 
-      salesPerson: user.name,
+      salesKey: salesSelect.value, 
+      salesPerson: selectedText,
       type: document.getElementById("type").value, 
       channels: cleanChannelsArray 
     })
@@ -903,7 +929,6 @@ function renderStbDashboard() {
     const queueBody = document.getElementById("stbRequestsQueueBody");
     if (!stockBody || !queueBody) return;
 
-    // Render Stock Balances Grid (Suntech removed from this view matrix exclusively)
     const orderOfPlatforms = ["Hwacom", "Netgem", "MIT", "SDMC"];
     stockBody.innerHTML = orderOfPlatforms.map(platform => {
         const item = globalStbStock[platform] || { onHand: 0, issued: 0, required: 0, lastReceived: "" };
@@ -921,7 +946,6 @@ function renderStbDashboard() {
         `;
     }).join("");
 
-    // Render Processing Pipeline Requests Queue
     if (!globalStbRequests || globalStbRequests.length === 0) {
         queueBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#7f8c8d;">No active STB tickets currently in the pipeline queue.</td></tr>`;
         return;
@@ -962,7 +986,6 @@ function renderStbDashboard() {
     }).join("");
 }
 
-// FIXED: STOCK ARRIVALS MANAGEMENT CAPTURES AND SENDS INPUT RECEIVE DATE
 async function addIncomingStock() {
     const platform = document.getElementById("incomingPlatform").value;
     const qty = Number(document.getElementById("incomingQty").value);
