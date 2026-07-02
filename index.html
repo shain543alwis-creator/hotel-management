@@ -884,7 +884,9 @@ function renderStbDashboard() {
     const queueBody = document.getElementById("stbRequestsQueueBody");
     if (!stockBody || !queueBody) return;
 
+    // Added DVB-T STB here
     const orderOfPlatforms = ["Hwacom", "Netgem", "MIT", "SDMC", "DVB-T STB"];
+    
     stockBody.innerHTML = orderOfPlatforms.map(platform => {
         const item = globalStbStock[platform] || { onHand: 0, issued: 0, required: 0, lastReceived: "" };
         const netRequired = item.required || 0;
@@ -901,13 +903,17 @@ function renderStbDashboard() {
         `;
     }).join("");
 
-// Inside function renderStbDashboard() -> inside the queueBody.innerHTML map function
-const selectHtml = (String(req.platform).toLowerCase() === 'suntech') ?
-    `<select id="modelSelect_${req._row}"><option value="Hwacom">Hwacom</option><option value="Netgem">Netgem</option></select>` :
-    (String(req.platform).toLowerCase() === 'mit') ? 
-    `<select id="modelSelect_${req._row}"><option value="MIT">MIT</option><option value="SDMC">SDMC</option></select>` :
-    (String(req.platform).toLowerCase() === 'dvb-t') ?
-    `<select id="modelSelect_${req._row}"><option value="DVB-T STB">DVB-T STB</option></select>` : "";
+    queueBody.innerHTML = globalStbRequests.map(req => {
+        const platform = String(req.platform).toLowerCase();
+        let selectHtml = "";
+
+        if (platform === 'suntech') {
+            selectHtml = `<select id="modelSelect_${req._row}"><option value="Hwacom">Hwacom</option><option value="Netgem">Netgem</option></select>`;
+        } else if (platform === 'mit') {
+            selectHtml = `<select id="modelSelect_${req._row}"><option value="MIT">MIT</option><option value="SDMC">SDMC</option></select>`;
+        } else if (platform === 'dvb-t') {
+            selectHtml = `<select id="modelSelect_${req._row}"><option value="DVB-T STB">DVB-T STB</option></select>`;
+        }
 
         const actionCell = req.status.toLowerCase() === 'pending' ?
             `${selectHtml}<button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, '${req.platform}', ${req.qty})">Approve & Issue</button>` :
