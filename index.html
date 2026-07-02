@@ -333,7 +333,7 @@
                             <option value="MIT">MIT</option>
                             <option value="Suntech">Suntech</option>
                             <option value="SDMC">SDMC</option>
-                            <option value="DVB-T STB">DVB-T STB</option>
+                            <option value="DVB-T">DVB-T</option>
                         </select>
                     </div>
                     <div>
@@ -884,9 +884,7 @@ function renderStbDashboard() {
     const queueBody = document.getElementById("stbRequestsQueueBody");
     if (!stockBody || !queueBody) return;
 
-    // Added DVB-T STB here
-    const orderOfPlatforms = ["Hwacom", "Netgem", "MIT", "SDMC", "DVB-T STB"];
-    
+    const orderOfPlatforms = ["Hwacom", "Netgem", "MIT", "SDMC", "DVB-T"];
     stockBody.innerHTML = orderOfPlatforms.map(platform => {
         const item = globalStbStock[platform] || { onHand: 0, issued: 0, required: 0, lastReceived: "" };
         const netRequired = item.required || 0;
@@ -904,15 +902,15 @@ function renderStbDashboard() {
     }).join("");
 
     queueBody.innerHTML = globalStbRequests.map(req => {
-        const platform = String(req.platform).toLowerCase();
         let selectHtml = "";
-
-        if (platform === 'suntech') {
+        const platformLower = String(req.platform).toLowerCase();
+        
+        if (platformLower === 'suntech') {
             selectHtml = `<select id="modelSelect_${req._row}"><option value="Hwacom">Hwacom</option><option value="Netgem">Netgem</option></select>`;
-        } else if (platform === 'mit') {
+        } else if (platformLower === 'mit') {
             selectHtml = `<select id="modelSelect_${req._row}"><option value="MIT">MIT</option><option value="SDMC">SDMC</option></select>`;
-        } else if (platform === 'dvb-t') {
-            selectHtml = `<select id="modelSelect_${req._row}"><option value="DVB-T STB">DVB-T STB</option></select>`;
+        } else if (platformLower === 'dvb-t' || platformLower === 'dvb-t stb') {
+            selectHtml = `<select id="modelSelect_${req._row}"><option value="DVB-T">DVB-T</option></select>`;
         }
 
         const actionCell = req.status.toLowerCase() === 'pending' ?
