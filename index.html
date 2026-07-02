@@ -884,7 +884,7 @@ function renderStbDashboard() {
     const queueBody = document.getElementById("stbRequestsQueueBody");
     if (!stockBody || !queueBody) return;
 
-    const orderOfPlatforms = ["Hwacom", "Netgem", "MIT", "SDMC"];
+    const orderOfPlatforms = ["Hwacom", "Netgem", "MIT", "SDMC", "DVB-T STB"];
     stockBody.innerHTML = orderOfPlatforms.map(platform => {
         const item = globalStbStock[platform] || { onHand: 0, issued: 0, required: 0, lastReceived: "" };
         const netRequired = item.required || 0;
@@ -901,11 +901,13 @@ function renderStbDashboard() {
         `;
     }).join("");
 
-    queueBody.innerHTML = globalStbRequests.map(req => {
-        const selectHtml = (String(req.platform).toLowerCase() === 'suntech') ?
-            `<select id="modelSelect_${req._row}"><option value="Hwacom">Hwacom</option><option value="Netgem">Netgem</option></select>` :
-            (String(req.platform).toLowerCase() === 'mit') ? 
-            `<select id="modelSelect_${req._row}"><option value="MIT">MIT</option><option value="SDMC">SDMC</option></select>` : "";
+// Inside function renderStbDashboard() -> inside the queueBody.innerHTML map function
+const selectHtml = (String(req.platform).toLowerCase() === 'suntech') ?
+    `<select id="modelSelect_${req._row}"><option value="Hwacom">Hwacom</option><option value="Netgem">Netgem</option></select>` :
+    (String(req.platform).toLowerCase() === 'mit') ? 
+    `<select id="modelSelect_${req._row}"><option value="MIT">MIT</option><option value="SDMC">SDMC</option></select>` :
+    (String(req.platform).toLowerCase() === 'dvb-t') ?
+    `<select id="modelSelect_${req._row}"><option value="DVB-T STB">DVB-T STB</option></select>` : "";
 
         const actionCell = req.status.toLowerCase() === 'pending' ?
             `${selectHtml}<button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, '${req.platform}', ${req.qty})">Approve & Issue</button>` :
