@@ -704,6 +704,16 @@ async function addHotel() {
   });
 
   alert("Registry Dataset Synchronized Successfully!");
+  
+  // CLEAR FORM FIELDS
+  document.getElementById("hName").value = "";
+  document.getElementById("cId").value = "";
+  document.getElementById("tv").value = "";
+  document.getElementById("from").value = "";
+  document.getElementById("to").value = "";
+  document.getElementById("type").selectedIndex = 0;
+  checkedInputElements.forEach(checkbox => checkbox.checked = false);
+
   await loadFromSheet();
 }
 
@@ -876,6 +886,15 @@ async function submitStbRequest() {
         })
     });
     alert("STB Requirement request uploaded successfully!");
+
+    // CLEAR FORM FIELDS
+    document.getElementById("stbHotelName").value = "";
+    document.getElementById("stbArea").value = "";
+    document.getElementById("stbAddress").value = "";
+    document.getElementById("stbCircuit").value = "";
+    document.getElementById("stbQty").value = "";
+    document.getElementById("stbPlatform").selectedIndex = 0;
+
     await loadFromSheet();
 }
 
@@ -932,6 +951,12 @@ async function addIncomingStock() {
         })
     });
     alert("Inbound stock updated.");
+
+    // CLEAR FORM FIELDS
+    document.getElementById("incomingQty").value = "";
+    document.getElementById("incomingDate").value = "";
+    document.getElementById("incomingPlatform").selectedIndex = 0;
+
     await loadFromSheet();
 }
 
