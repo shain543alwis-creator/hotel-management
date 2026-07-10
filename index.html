@@ -94,28 +94,8 @@
         .history-tag { display: inline-block; background: #f1f2f6; color: #5d6d7e; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin: 2px; border: 1px solid #dcdde1; }
         .history-tag.new { background: #d4edda; color: #155724; border-color: #c3e6cb; }
 
-        .checkbox-matrix-container { 
-            max-height: 320px; 
-            overflow-y: auto; 
-            border: 1px solid var(--border-color); 
-            padding: 10px; 
-            border-radius: 6px; 
-            background: var(--bg-light); 
-            display: block; 
-            margin-bottom: 25px; 
-        }
-        .checkbox-item { 
-            display: flex; 
-            align-items: center; 
-            gap: 14px; 
-            font-size: 15px; 
-            font-weight: 500; 
-            cursor: pointer; 
-            padding: 10px 12px; 
-            border-bottom: 1px solid #e8ecef; 
-            width: 100%; 
-            box-sizing: border-box;
-        }
+        .checkbox-matrix-container { max-height: 320px; overflow-y: auto; border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; background: var(--bg-light); display: block; margin-bottom: 25px; }
+        .checkbox-item { display: flex; align-items: center; gap: 14px; font-size: 15px; font-weight: 500; cursor: pointer; padding: 10px 12px; border-bottom: 1px solid #e8ecef; width: 100%; box-sizing: border-box; }
         .checkbox-item:last-child { border-bottom: none; }
         .checkbox-item:hover { background-color: rgba(30, 55, 153, 0.05); }
         .checkbox-item input { width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
@@ -143,10 +123,6 @@
         .btn-success { background: var(--success); }
         .btn-success:hover { background: #2ecc71; }
         .btn-small { padding: 6px 12px; font-size: 13px; border-radius: 4px; }
-        
-        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-        .status-pending { background: #ffeaa7; color: #d35400; }
-        .status-issued { background: #d4edda; color: #155724; }
     </style>
 </head>
 <body>
@@ -193,6 +169,7 @@
             <button id="deleteBtn" onclick="show('deletePage')"><i class="fa-solid fa-sliders"></i> Manage Hotels</button>
             <button id="channelBtn" onclick="show('channels')"><i class="fa-solid fa-tv"></i> Channel Utilization</button>
             <button id="historyBtn" onclick="show('history')"><i class="fa-solid fa-history"></i> Swap History Log</button>
+            <button id="userAdminBtn" onclick="show('userAdmin')"><i class="fa-solid fa-users-cog"></i> Manage Users</button>
         </div>
 
         <div class="main-content">
@@ -420,6 +397,51 @@
                 </div>
             </div>
 
+            <div id="userAdmin" class="hidden">
+                <h2 class="section-title"><i class="fa-solid fa-user-plus"></i> Register New User Account</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; align-items: flex-end; margin-bottom: 35px;">
+                    <div>
+                        <label>Display Name</label>
+                        <input type="text" id="newUserName" placeholder="Full Name" style="margin-bottom:0;">
+                    </div>
+                    <div>
+                        <label>Login Username</label>
+                        <input type="text" id="newUserU" placeholder="Unique Login ID" style="margin-bottom:0;">
+                    </div>
+                    <div>
+                        <label>Password</label>
+                        <input type="text" id="newUserP" placeholder="Password" style="margin-bottom:0;">
+                    </div>
+                    <div>
+                        <label>Account Role Level</label>
+                        <select id="newUserRole" style="margin-bottom:0;">
+                            <option value="sales">Sales Representative</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button class="btn" onclick="addUser()" style="width:100%;">
+                            <i class="fa-solid fa-user-check"></i> Provision User
+                        </button>
+                    </div>
+                </div>
+
+                <h2 class="section-title"><i class="fa-solid fa-users"></i> System User Directory</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Display Name</th>
+                                <th>Login Username</th>
+                                <th>System Role</th>
+                                <th style="text-align: right;">Administrative Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -443,16 +465,6 @@
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbxa0Ejf39dmUYV4QzLKDglQXNXKPxcv4BGgVNOvcJqof123i41jLxMy2T9rrpJ-5Cvq/exec";
 
-// HARDCODED USER LOGIN DETAILS
-const users = [
-  {u: "admin", p: "admin123", role: "admin", name: "Admin"},
-  {u: "asanka", p: "1234", role: "sales", name: "Asanka"},
-  {u: "hadi", p: "1234", role: "sales", name: "Hadi"},
-  {u: "roy", p: "1234", role: "sales", name: "Roy"},
-  {u: "sanjaya", p: "1234", role: "sales", name: "Sanjaya"},
-  {u: "lasan", p: "1234", role: "sales", name: "Lasan"}
-];
-
 let current = null;
 let hotels = [];
 let globalMasterChannels = []; 
@@ -460,6 +472,7 @@ let globalSwapLogs = [];
 let activeEditingRowId = null;
 let globalStbStock = {};
 let globalStbRequests = [];
+let globalUsers = [];
 
 document.addEventListener("DOMContentLoaded", () => {
     const catchEnter = (e) => { if (e.key === "Enter") login(); };
@@ -493,7 +506,7 @@ async function loadFromSheet() {
   try {
     const res = await fetch(API_URL, { cache: "no-store" });
     const text = await res.text();
-    const parsedPayload = JSON.parse(text || '{"hotels":[],"masterChannels":[],"swapHistory":[],"stbStock":{},"stbRequests":[]}');
+    const parsedPayload = JSON.parse(text || '{"hotels":[],"masterChannels":[],"swapHistory":[],"stbStock":{},"stbRequests":[],"users":[]}');
     
     let rawChannels = parsedPayload.masterChannels || [];
     rawChannels.sort((a, b) => {
@@ -507,11 +520,13 @@ async function loadFromSheet() {
     globalSwapLogs = parsedPayload.swapHistory || [];
     globalStbStock = parsedPayload.stbStock || {};
     globalStbRequests = parsedPayload.stbRequests || [];
+    globalUsers = parsedPayload.users || [];
     
     const data = parsedPayload.hotels || [];
     hotels = Array.isArray(data) ? data.map(normalizeHotel).filter(h => h !== null && h.hotelName !== "Unnamed Account") : [];
     
     renderChannelCheckboxes();
+    loadSales(); 
     renderDash();
     loadHotels();
     renderStbDashboard();
@@ -519,6 +534,7 @@ async function loadFromSheet() {
     if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
     if (!document.getElementById("channels").classList.contains("hidden")) loadSummary();
     if (!document.getElementById("history").classList.contains("hidden")) renderHistoryLogPage();
+    if (!document.getElementById("userAdmin").classList.contains("hidden")) renderUserAdmin();
   } catch (e) {
     console.error("System sync synchronization error: ", e);
     hotels = [];
@@ -541,25 +557,45 @@ function renderChannelCheckboxes() {
     `).join("");
 }
 
-function login() {
+async function login() {
   const usernameInput = document.getElementById("u").value.trim().toLowerCase();
   const passwordInput = document.getElementById("p").value;
 
-  current = users.find(x => x.u === usernameInput && x.p === passwordInput);
-  
-  if (current) {
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("app").style.display = "block";
+  if (!usernameInput || !passwordInput) {
+    alert("Please enter a username and password.");
+    return;
+  }
 
-    document.getElementById("userNameDisplay").innerText = current.name;
-    document.getElementById("avatarLetter").innerText = current.name.charAt(0).toUpperCase();
-    document.getElementById("userBadgeSlot").innerHTML = `<span class='role-badge ${current.role === 'admin' ? 'admin' : ''}'>${current.role}</span>`;
+  try {
+    const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "login",
+            u: usernameInput,
+            p: passwordInput
+        })
+    });
+    
+    const data = await res.json();
+    
+    if (data.success && data.user) {
+      current = data.user;
+      
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("app").style.display = "block";
 
-    setupRole();
-    loadSales();
-    loadFromSheet();
-  } else {
-    alert("Invalid Credentials Entered. Access Denied.");
+      document.getElementById("userNameDisplay").innerText = current.name;
+      document.getElementById("avatarLetter").innerText = current.name.charAt(0).toUpperCase();
+      document.getElementById("userBadgeSlot").innerHTML = `<span class='role-badge ${current.role === 'admin' ? 'admin' : ''}'>${current.role}</span>`;
+
+      setupRole();
+      loadFromSheet(); 
+    } else {
+      alert("Invalid Credentials Entered. Access Denied.");
+    }
+  } catch (error) {
+    console.error("Login verification failed: ", error);
+    alert("Error authenticating. Please try again.");
   }
 }
 
@@ -568,22 +604,25 @@ function setupRole() {
   const channelBtn = document.getElementById("channelBtn");
   const deleteBtn = document.getElementById("deleteBtn");
   const stbAdminBtn = document.getElementById("stbAdminBtn");
+  const userAdminBtn = document.getElementById("userAdminBtn");
 
   if (current.role === "sales") {
     if(channelBtn) channelBtn.style.display = "none";
     if(historyBtn) historyBtn.style.display = "none"; 
     if(stbAdminBtn) stbAdminBtn.style.display = "none";
+    if(userAdminBtn) userAdminBtn.style.display = "none";
     if(deleteBtn) deleteBtn.style.display = "block";
   } else {
     if(channelBtn) channelBtn.style.display = "block";
     if(historyBtn) historyBtn.style.display = "block"; 
     if(stbAdminBtn) stbAdminBtn.style.display = "block";
+    if(userAdminBtn) userAdminBtn.style.display = "block";
     if(deleteBtn) deleteBtn.style.display = "block";
   }
 }
 
 function show(v) {
-  ["dash", "hotels", "channels", "add", "deletePage", "history", "stbRequest", "stbAdmin"].forEach(x => {
+  ["dash", "hotels", "channels", "add", "deletePage", "history", "stbRequest", "stbAdmin", "userAdmin"].forEach(x => {
     document.getElementById(x)?.classList.add("hidden");
     document.getElementById("tab-" + x)?.classList.remove("active");
   });
@@ -596,6 +635,7 @@ function show(v) {
   if (v === "dash") renderDash();
   if (v === "history") renderHistoryLogPage();
   if (v === "stbAdmin") renderStbDashboard();
+  if (v === "userAdmin") renderUserAdmin();
 }
 
 function getVisibleHotels() {
@@ -636,15 +676,16 @@ function renderDash() {
       </div>
     `;
     
-    const staticSalesKeys = ["asanka", "hadi", "roy", "sanjaya", "lasan"];
-    staticSalesKeys.forEach((key, idx) => {
-      const list = hotels.filter(h => (h.salesKey || "") === key);
+    // Dynamically generate dashboard cards for all users with 'sales' role
+    const salesUsers = globalUsers.filter(u => u.role === "sales");
+    salesUsers.forEach((userObj, idx) => {
+      const list = hotels.filter(h => (h.salesKey || "") === userObj.u);
       if (list.length === 0) return;
       const tv = list.reduce((a, b) => a + Number(b.tvPoints || 0), 0);
       const gradients = ["linear-gradient(135deg, #079992 0%, #38ada9 100%)", "linear-gradient(135deg, #60a3bc 0%, #3c6382 100%)", "linear-gradient(135deg, #e67e22 0%, #d35400 100%)", "linear-gradient(135deg, #78e08f 0%, #38ea92 100%)"];
       dashGrid.innerHTML += `
         <div class="box" style="background: ${gradients[idx % gradients.length]}">
-          <h3>${key.toUpperCase()} Portfolio Balance</h3>
+          <h3>${userObj.name.toUpperCase()} Portfolio Balance</h3>
           <div class="stat">${list.length} Accounts</div>
           <p style="margin-bottom: 8px;"><i class="fa-solid fa-display"></i> Servicing ${tv} Terminal Points</p>
           <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">${generateBreakdownHtml(list)}</div>
@@ -673,13 +714,14 @@ function loadSales() {
     salesSelect.value = current.u;
     return;
   }
-  salesSelect.innerHTML = `
-    <option value="asanka">Asanka</option>
-    <option value="hadi">Hadi</option>
-    <option value="roy">Roy</option>
-    <option value="sanjaya">Sanjaya</option>
-    <option value="lasan">Lasan</option>
-  `;
+  
+  // Dynamically populate dropdown based on active system users
+  const salesReps = globalUsers.filter(u => u.role === "sales");
+  if (salesReps.length === 0) {
+     salesSelect.innerHTML = `<option value="">No sales reps found</option>`;
+  } else {
+     salesSelect.innerHTML = salesReps.map(rep => `<option value="${rep.u}">${rep.name}</option>`).join("");
+  }
 }
 
 async function addHotel() {
@@ -705,7 +747,6 @@ async function addHotel() {
 
   alert("Registry Dataset Synchronized Successfully!");
   
-  // CLEAR FORM FIELDS
   document.getElementById("hName").value = "";
   document.getElementById("cId").value = "";
   document.getElementById("tv").value = "";
@@ -887,7 +928,6 @@ async function submitStbRequest() {
     });
     alert("STB Requirement request uploaded successfully!");
 
-    // CLEAR FORM FIELDS
     document.getElementById("stbHotelName").value = "";
     document.getElementById("stbArea").value = "";
     document.getElementById("stbAddress").value = "";
@@ -952,7 +992,6 @@ async function addIncomingStock() {
     });
     alert("Inbound stock updated.");
 
-    // CLEAR FORM FIELDS
     document.getElementById("incomingQty").value = "";
     document.getElementById("incomingDate").value = "";
     document.getElementById("incomingPlatform").selectedIndex = 0;
@@ -1005,6 +1044,65 @@ function loadDelete() {
   const delTable = document.getElementById("delTable");
   if(!delTable) return;
   delTable.innerHTML = list.map((h) => `<tr><td><strong>${h.hotelName}</strong></td><td>${h.salesPerson}</td><td><button class="btn btn-danger" onclick="del(${h._row}, '${h.hotelName}', '${h.salesKey}')">Delete</button></td></tr>`).join("");
+}
+
+// === NEW USER ADMIN FUNCTIONS ===
+
+function renderUserAdmin() {
+    const tbody = document.getElementById("usersTableBody");
+    if (!tbody) return;
+    tbody.innerHTML = globalUsers.map(user => `
+        <tr>
+            <td><strong>${user.name}</strong></td>
+            <td><code>${user.u}</code></td>
+            <td><span class="role-badge ${user.role === 'admin' ? 'admin' : ''}">${user.role}</span></td>
+            <td style="text-align: right;">
+                ${user.u === current.u ? 
+                  `<span style="color:#7f8c8d; font-size:12px; font-weight:600;">Current User</span>` : 
+                  `<button class="btn btn-danger btn-small" onclick="deleteUser(${user._row}, '${user.u}')"><i class="fa-solid fa-trash-can"></i> Remove</button>`}
+            </td>
+        </tr>
+    `).join("");
+}
+
+async function addUser() {
+    const name = document.getElementById("newUserName").value.trim();
+    const u = document.getElementById("newUserU").value.trim().toLowerCase();
+    const p = document.getElementById("newUserP").value;
+    const role = document.getElementById("newUserRole").value;
+
+    if (!name || !u || !p) {
+        alert("Please fill out all fields to provision a new user.");
+        return;
+    }
+
+    if (globalUsers.find(user => user.u === u)) {
+        alert("This Username already exists in the system!");
+        return;
+    }
+
+    await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "addUser", name: name, u: u, p: p, role: role })
+    });
+
+    document.getElementById("newUserName").value = "";
+    document.getElementById("newUserU").value = "";
+    document.getElementById("newUserP").value = "";
+    document.getElementById("newUserRole").selectedIndex = 0;
+
+    alert("User Provisioned Successfully!");
+    await loadFromSheet();
+}
+
+async function deleteUser(row, username) {
+    if (!confirm(`Are you certain you want to permanently remove user account: ${username}?`)) return;
+    await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "deleteUser", row: Number(row) })
+    });
+    alert("User account removed.");
+    await loadFromSheet();
 }
 
 function logout() { location.reload(); }
