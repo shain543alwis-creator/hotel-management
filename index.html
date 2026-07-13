@@ -123,6 +123,10 @@
         .btn-success { background: var(--success); }
         .btn-success:hover { background: #2ecc71; }
         .btn-small { padding: 6px 12px; font-size: 13px; border-radius: 4px; }
+        
+        /* New Styles for Channel Drilldown */
+        .clickable-channel { color: var(--primary); cursor: pointer; font-weight: 700; text-decoration: underline; }
+        .clickable-channel:hover { color: var(--accent); }
     </style>
 </head>
 <body>
@@ -448,16 +452,14 @@
     <div id="channelSwapModal" class="page-overlay-modal hidden">
         <div class="modal-subpage-box">
             <div class="modal-header">
-                <h3 style="color: var(--primary); font-size: 18px; font-weight:700;"><i class="fa-solid fa-arrows-rotate" style="color:var(--accent);"></i> Channel Swap Management Page</h3>
+                <h3 id="modalTitle" style="color: var(--primary); font-size: 18px; font-weight:700;"><i class="fa-solid fa-arrows-rotate" style="color:var(--accent);"></i> Channel Management</h3>
                 <button style="background:transparent; border:none; font-size:18px; cursor:pointer; color:#7f8c8d;" onclick="closeChannelSwapPage()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <p style="font-size: 13px; color: #7f8c8d; margin-bottom: 20px;">Review the existing channel lineup configuration list. Map any channel item row directly to a replacement master choice dropdown alternative.</p>
                 <div id="swapRowsContainer"></div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-danger btn-small" onclick="closeChannelSwapPage()">Cancel</button>
-                <button class="btn btn-small" style="background: var(--success);" onclick="saveChannelSwapModifications()">Save Swap Settings</button>
+            <div class="modal-footer" id="modalFooter">
+                <button class="btn btn-danger btn-small" onclick="closeChannelSwapPage()">Close</button>
             </div>
         </div>
     </div>
@@ -676,7 +678,6 @@ function renderDash() {
       </div>
     `;
     
-    // Dynamically generate dashboard cards for all users with 'sales' role
     const salesUsers = globalUsers.filter(u => u.role === "sales");
     salesUsers.forEach((userObj, idx) => {
       const list = hotels.filter(h => (h.salesKey || "") === userObj.u);
@@ -715,7 +716,6 @@ function loadSales() {
     return;
   }
   
-  // Dynamically populate dropdown based on active system users
   const salesReps = globalUsers.filter(u => u.role === "sales");
   if (salesReps.length === 0) {
      salesSelect.innerHTML = `<option value="">No sales reps found</option>`;
@@ -817,10 +817,18 @@ function openChannelSwapPage(rowId) {
     if (!hotelObj) return;
 
     const container = document.getElementById("swapRowsContainer");
-    container.innerHTML = "";
+    const title = document.getElementById("modalTitle");
+    const footer = document.getElementById("modalFooter");
+    
+    title.innerHTML = '<i class="fa-solid fa-arrows-rotate" style="color:var(--accent);"></i> Channel Swap Management';
+    footer.innerHTML = `
+        <button class="btn btn-danger btn-small" onclick="closeChannelSwapPage()">Cancel</button>
+        <button class="btn btn-small" style="background: var(--success);" onclick="saveChannelSwapModifications()">Save Swap Settings</button>
+    `;
 
+    container.innerHTML = "";
     if (!hotelObj.channels || hotelObj.channels.length === 0) {
-        container.innerHTML = `<p style="color:#7f8c8d; font-size:14px; text-align:center;">This hotel has no current channel listings to swap.</p>`;
+        container.innerHTML = `<p style="color:#7f8c8d; font-size:14px; text-align:center;">This hotel has no current channel listings.</p>`;
         document.getElementById("channelSwapModal").classList.remove("hidden");
         return;
     }
@@ -1019,6 +1027,8 @@ async function del(rowNum, hotelName, salesKey) {
 function loadSummary() {
   const visible = getVisibleHotels();
   const map = {}; const countMap = {};
+  const channelToHotels = {}; 
+
   visible.forEach(h => {
     if(h && Array.isArray(h.channels)) {
       h.channels.forEach(c => {
@@ -1026,17 +1036,42 @@ function loadSummary() {
         if (cleanC) {
           map[cleanC] = (map[cleanC] || 0) + Number(h.tvPoints || 0);
           countMap[cleanC] = (countMap[cleanC] || 0) + 1;
+          if(!channelToHotels[cleanC]) channelToHotels[cleanC] = [];
+          channelToHotels[cleanC].push(h.hotelName);
         }
       });
     }
   });
+  
   const summaryTable = document.getElementById("summaryTable");
   if(!summaryTable) return;
   
   summaryTable.innerHTML = Object.keys(map).sort((a,b) => extractLeadingNumber(a) - extractLeadingNumber(b)).map(c => {
     const hotelCount = countMap[c] || 0;
-    return `<tr><td><strong>${c}</strong></td><td>${map[c]}</td><td>${hotelCount}</td></tr>`;
+    const hotelListJson = JSON.stringify(channelToHotels[c]);
+    return `<tr>
+        <td><span class="clickable-channel" onclick='showChannelDetails("${c}", ${hotelListJson})'>${c}</span></td>
+        <td>${map[c]}</td>
+        <td>${hotelCount}</td>
+    </tr>`;
   }).join("");
+}
+
+function showChannelDetails(channelName, hotelList) {
+    const container = document.getElementById("swapRowsContainer");
+    const title = document.getElementById("modalTitle");
+    const footer = document.getElementById("modalFooter");
+    
+    title.innerHTML = `<i class="fa-solid fa-tv" style="color:var(--accent);"></i> ${channelName} Locations`;
+    footer.innerHTML = `<button class="btn btn-small" onclick="closeChannelSwapPage()">Close</button>`;
+    
+    container.innerHTML = hotelList.map(h => `
+        <div style="padding:10px; margin-bottom:5px; background:#f8f9fa; border-left:4px solid var(--primary); border-radius:4px; font-size:14px; font-weight:600; color:var(--text-dark);">
+            ${h}
+        </div>
+    `).join("");
+    
+    document.getElementById("channelSwapModal").classList.remove("hidden");
 }
 
 function loadDelete() {
@@ -1045,8 +1080,6 @@ function loadDelete() {
   if(!delTable) return;
   delTable.innerHTML = list.map((h) => `<tr><td><strong>${h.hotelName}</strong></td><td>${h.salesPerson}</td><td><button class="btn btn-danger" onclick="del(${h._row}, '${h.hotelName}', '${h.salesKey}')">Delete</button></td></tr>`).join("");
 }
-
-// === NEW USER ADMIN FUNCTIONS ===
 
 function renderUserAdmin() {
     const tbody = document.getElementById("usersTableBody");
