@@ -249,6 +249,10 @@
                 <h2 class="section-title"><i class="fa-solid fa-paper-plane"></i> Submit PEOTV STB Request</h2>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
                     <div>
+                        <label>Requested Person Name</label>
+                        <input type="text" id="stbRequesterName" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                    </div>
+                    <div>
                         <label>Hotel Name</label>
                         <input type="text" id="stbHotelName" placeholder="Enter Hotel Name">
                     </div>
@@ -256,12 +260,12 @@
                         <label>Area</label>
                         <input type="text" id="stbArea" placeholder="e.g. Colombo, Kandy">
                     </div>
-                    <div>
-                        <label>Address</label>
-                        <input type="text" id="stbAddress" placeholder="Full Postal Address">
-                    </div>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div>
+                        <label>Address <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="stbAddress" placeholder="Full Postal Address (Required)">
+                    </div>
                     <div>
                         <label>Circuit ID / PBIZ Number</label>
                         <input type="text" id="stbCircuit" placeholder="e.g. PBIZ-12345">
@@ -270,6 +274,8 @@
                         <label>Number of STBs Required</label>
                         <input type="number" id="stbQty" placeholder="e.g. 10">
                     </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
                     <div>
                         <label>Hardware Platform Selection Dropdown</label>
                         <select id="stbPlatform">
@@ -278,10 +284,37 @@
                             <option value="DVB-T">DVB-T</option>
                         </select>
                     </div>
+                    <div>
+                        <label>Required Timeframe</label>
+                        <select id="stbTimeframe">
+                            <option value="1 week">1 week</option>
+                            <option value="2 week">2 week</option>
+                            <option value="3 week">3 week</option>
+                        </select>
+                    </div>
                 </div>
-                <button class="btn" onclick="submitStbRequest()">
+                <button class="btn" onclick="submitStbRequest()" style="margin-bottom: 35px;">
                     <i class="fa-solid fa-share-from-square"></i> Send STB Request
                 </button>
+
+                <h2 class="section-title"><i class="fa-solid fa-list-check"></i> STB Requests Directory & Timeline Management</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Requested Person</th>
+                                <th>Hotel / Area</th>
+                                <th>Address</th>
+                                <th>Circuit / PBIZ</th>
+                                <th>Platform & Qty</th>
+                                <th>Required Timeframe</th>
+                                <th>Timeline Management</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stbUserRequestsBody">
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="stbAdmin" class="hidden">
@@ -337,10 +370,13 @@
                     <table>
                         <thead>
                             <tr>
+                                <th>Sales Representative</th>
                                 <th>Hotel / Area</th>
+                                <th>Address</th>
                                 <th>Circuit / PBIZ</th>
                                 <th>Platform</th>
                                 <th>Qty Requested</th>
+                                <th>Timeline</th>
                                 <th>Workflow State</th>
                                 <th style="text-align: right;">Fulfillment Automation</th>
                             </tr>
@@ -532,6 +568,7 @@ async function loadFromSheet() {
     renderDash();
     loadHotels();
     renderStbDashboard();
+    renderStbUserRequests();
     
     if (!document.getElementById("deletePage").classList.contains("hidden")) loadDelete();
     if (!document.getElementById("channels").classList.contains("hidden")) loadSummary();
@@ -589,6 +626,9 @@ async function login() {
       document.getElementById("userNameDisplay").innerText = current.name;
       document.getElementById("avatarLetter").innerText = current.name.charAt(0).toUpperCase();
       document.getElementById("userBadgeSlot").innerHTML = `<span class='role-badge ${current.role === 'admin' ? 'admin' : ''}'>${current.role}</span>`;
+      
+      const reqNameInput = document.getElementById("stbRequesterName");
+      if (reqNameInput) reqNameInput.value = current.name;
 
       setupRole();
       loadFromSheet(); 
@@ -637,6 +677,7 @@ function show(v) {
   if (v === "dash") renderDash();
   if (v === "history") renderHistoryLogPage();
   if (v === "stbAdmin") renderStbDashboard();
+  if (v === "stbRequest") renderStbUserRequests();
   if (v === "userAdmin") renderUserAdmin();
 }
 
@@ -688,7 +729,7 @@ function renderDash() {
         <div class="box" style="background: ${gradients[idx % gradients.length]}">
           <h3>${userObj.name.toUpperCase()} Portfolio Balance</h3>
           <div class="stat">${list.length} Accounts</div>
-          <p style="margin-bottom: 8px;"><i class="fa-solid fa-display"></i> Servicing ${tv} Terminal Points</p>
+          <p style="margin-bottom: 8px;"><i class="fa-solid fa-tv"></i> Servicing ${tv} Terminal Points</p>
           <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 13px; opacity: 0.95; line-height: 1.6;">${generateBreakdownHtml(list)}</div>
         </div>
       `;
@@ -913,8 +954,15 @@ function renderHistoryLogPage() {
 
 async function submitStbRequest() {
     const hName = document.getElementById("stbHotelName").value.trim();
+    const address = document.getElementById("stbAddress").value.trim();
     const qty = Number(document.getElementById("stbQty").value);
     const platform = document.getElementById("stbPlatform").value;
+    const timeframe = document.getElementById("stbTimeframe").value;
+
+    if (!address) {
+        alert("Please enter the STB Request Address. Address is mandatory to proceed.");
+        return;
+    }
 
     if (!hName || !qty || qty <= 0) {
         alert("Please specify a valid Hotel Name and STB Quantity.");
@@ -927,10 +975,11 @@ async function submitStbRequest() {
             action: "submitStbRequest",
             hotelName: hName,
             area: document.getElementById("stbArea").value.trim(),
-            address: document.getElementById("stbAddress").value.trim(),
+            address: address,
             circuitId: document.getElementById("stbCircuit").value.trim(),
             qty: qty,
             platform: platform,
+            timeframe: timeframe,
             salesRep: current.name
         })
     });
@@ -942,7 +991,73 @@ async function submitStbRequest() {
     document.getElementById("stbCircuit").value = "";
     document.getElementById("stbQty").value = "";
     document.getElementById("stbPlatform").selectedIndex = 0;
+    document.getElementById("stbTimeframe").selectedIndex = 0;
 
+    await loadFromSheet();
+}
+
+function renderStbUserRequests() {
+    const body = document.getElementById("stbUserRequestsBody");
+    const reqNameInput = document.getElementById("stbRequesterName");
+    if (reqNameInput && current) reqNameInput.value = current.name;
+    if (!body) return;
+
+    if (!globalStbRequests || globalStbRequests.length === 0) {
+        body.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#7f8c8d;">No STB requests submitted yet.</td></tr>`;
+        return;
+    }
+
+    body.innerHTML = globalStbRequests.map(req => {
+        const currentTimeframe = req.timeframe || "3 week";
+        let reducedOptionsHtml = "";
+        
+        if (currentTimeframe === "3 week") {
+            reducedOptionsHtml = `
+                <select id="timeframeSelect_${req._row}" style="margin-bottom:0; padding:6px; font-size:13px; width: auto;">
+                    <option value="2 week">2 week</option>
+                    <option value="1 week">1 week</option>
+                </select>
+                <button class="btn btn-small" style="background:var(--primary-light); margin-left:5px;" onclick="reduceStbTimeframe(${req._row}, '${currentTimeframe}')">Reduce Time</button>
+            `;
+        } else if (currentTimeframe === "2 week") {
+            reducedOptionsHtml = `
+                <select id="timeframeSelect_${req._row}" style="margin-bottom:0; padding:6px; font-size:13px; width: auto;">
+                    <option value="1 week">1 week</option>
+                </select>
+                <button class="btn btn-small" style="background:var(--primary-light); margin-left:5px;" onclick="reduceStbTimeframe(${req._row}, '${currentTimeframe}')">Reduce Time</button>
+            `;
+        } else {
+            reducedOptionsHtml = `<span style="color:#27ae60; font-size:13px; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Minimum Timeframe</span>`;
+        }
+
+        return `
+            <tr>
+                <td><strong>${req.salesRep || req.requestedPerson || "N/A"}</strong></td>
+                <td><strong>${req.hotelName || ""}</strong><br><small style="color:#7f8c8d;">${req.area || ""}</small></td>
+                <td>${req.address || "N/A"}</td>
+                <td><code>${req.circuitId || "N/A"}</code></td>
+                <td>${req.platform || "N/A"} (${req.qty || 0} Units)</td>
+                <td><span class="history-tag new">${currentTimeframe}</span></td>
+                <td>${reducedOptionsHtml}</td>
+            </tr>
+        `;
+    }).join("");
+}
+
+async function reduceStbTimeframe(rowId, currentTimeframe) {
+    const selectEl = document.getElementById(`timeframeSelect_${rowId}`);
+    if (!selectEl) return;
+    const newTimeframe = selectEl.value;
+
+    await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "updateStbTimeframe",
+            row: Number(rowId),
+            timeframe: newTimeframe
+        })
+    });
+    alert(`Required timeline successfully reduced to ${newTimeframe}!`);
     await loadFromSheet();
 }
 
@@ -984,7 +1099,17 @@ function renderStbDashboard() {
             `${selectHtml}<button class="btn btn-success btn-small" onclick="issueStbDevice(${req._row}, '${req.platform}', ${req.qty})">Approve & Issue</button>` :
             `<span style="color:#27ae60;">Handed Over</span>`;
 
-        return `<tr><td><strong>${req.hotelName}</strong></td><td><code>${req.circuitId}</code></td><td>${req.platform}</td><td>${req.qty}</td><td>${req.status}</td><td>${actionCell}</td></tr>`;
+        return `<tr>
+            <td><strong>${req.salesRep || "N/A"}</strong></td>
+            <td><strong>${req.hotelName}</strong><br><small style="color:#7f8c8d;">${req.area || ""}</small></td>
+            <td>${req.address || "N/A"}</td>
+            <td><code>${req.circuitId}</code></td>
+            <td>${req.platform}</td>
+            <td>${req.qty}</td>
+            <td><span class="history-tag new">${req.timeframe || "3 week"}</span></td>
+            <td>${req.status}</td>
+            <td>${actionCell}</td>
+        </tr>`;
     }).join("");
 }
 
