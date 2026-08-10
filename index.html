@@ -1002,12 +1002,20 @@ function renderStbUserRequests() {
     if (reqNameInput && current) reqNameInput.value = current.name;
     if (!body) return;
 
-    if (!globalStbRequests || globalStbRequests.length === 0) {
-        body.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#7f8c8d;">No STB requests submitted yet.</td></tr>`;
+    let visibleRequests = globalStbRequests || [];
+    
+    if (current.role !== "admin") {
+        visibleRequests = visibleRequests.filter(req => 
+            req.salesRep === current.name || req.requestedPerson === current.name
+        );
+    }
+
+    if (visibleRequests.length === 0) {
+        body.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#7f8c8d;">No STB requests found for this user.</td></tr>`;
         return;
     }
 
-    body.innerHTML = globalStbRequests.map(req => {
+    body.innerHTML = visibleRequests.map(req => {
         const currentTimeframe = req.timeframe || "3 week";
         let reducedOptionsHtml = "";
         
